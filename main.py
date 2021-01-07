@@ -8,9 +8,14 @@ if __name__ == "__main__":
     if len(argv) != 3:
         print("Usage: 'python main.py [print_x] [netlist_y]")
         exit(1)
-        
+
     # create chip object from files
  
     chip = Chip(argv[1], argv[2])
 
     
+    # if blocked
+    # X 
+    # if blocked, North -> South
+    # Y 
+    # if blocked, West -> Easth

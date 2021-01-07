@@ -84,30 +84,35 @@ class Chip():
 
 
     def draw_wires(self, file):
-        # with open(file) as netlist:
-        #     next(netlist)
-        gate_a = self.gates["2"]
-        gate_b = self.gates["3"]
-        draw_x = gate_a["x_coord"]
-        draw_y = gate_a["y_coord"]
-        
-        
-        while draw_x != gate_b["x_coord"]:
-            # east
-            if draw_x < gate_b["x_coord"]:
-                pass
-            # west
-            if draw_x > gate_b["x_coord"]:
-                pass
-        
+        with open(file) as netlist:
+            next(netlist)
+
+            for line in netlist:
+                connection = line.strip("\n").split(",")
+                
+                gate_a = self.gates[connection[0]]
+                gate_b = self.gates[connection[1]]
+                draw_x = gate_a["x_coord"]
+                draw_y = gate_a["y_coord"]               
+                
+                while draw_y != gate_b["y_coord"]:
+                    # north
+                    if draw_y < gate_b["y_coord"]:
+                        draw_y = self.wire_north(draw_x, draw_y)
+                    # south
+                    if draw_y > gate_b["y_coord"]:
+                        draw_y = self.wire_south(draw_x, draw_y)
+
+                while draw_x != gate_b["x_coord"]:
+                    # east
+                    if draw_x < gate_b["x_coord"]:
+                        draw_x = self.wire_east(draw_x, draw_y)
+                    # west
+                    if draw_x > gate_b["x_coord"]:
+                        draw_x = self.wire_west(draw_x, draw_y)
 
 
-        
-        while draw_y > gate_b["y_coord"]:
-            x1 = [draw_x, draw_x]
-            y1 = [draw_y, draw_y - 1]
-            plt.plot(x1, y1, 'r')
-            draw_y -= 1
+
 
     def wire_north(self, draw_x, draw_y):
         self.coordinates[draw_x][draw_y].connections.append("north")
@@ -118,16 +123,18 @@ class Chip():
     
         plt.plot(x1, y1, 'r')
         draw_y += 1
+        return draw_y
 
     def wire_east(self, draw_x, draw_y):
         self.coordinates[draw_x][draw_y].connections.append("east")
         self.coordinates[draw_x + 1][draw_y].connections.append("west")
 
-        x1 = [draw_x, draw_x]
+        x1 = [draw_x, draw_x + 1]
         y1 = [draw_y, draw_y]
     
         plt.plot(x1, y1, 'r')
         draw_x += 1
+        return draw_x
     
     def wire_south(self, draw_x, draw_y):
         self.coordinates[draw_x][draw_y].connections.append("south")
@@ -138,16 +145,18 @@ class Chip():
         
         plt.plot(x1, y1, 'r')
         draw_y -= 1
+        return draw_y
         
     def wire_west(self, draw_x, draw_y):
         self.coordinates[draw_x][draw_y].connections.append("west")
         self.coordinates[draw_x - 1][draw_y].connections.append("east")
-        print(self.coordinates[5][5].connections)
+        
         x1 = [draw_x, draw_x - 1]
         y1 = [draw_y, draw_y]
         
         plt.plot(x1, y1, 'r')
         draw_x -= 1
+        return draw_x
     
 
 
