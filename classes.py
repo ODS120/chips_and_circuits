@@ -89,32 +89,52 @@ class Chip():
 
             for line in netlist:
                 connection = line.strip("\n").split(",")
-                
+                print(connection[0])
                 gate_a = self.gates[connection[0]]
                 gate_b = self.gates[connection[1]]
+                # gate_a = self.gates["1"]
+                # gate_b = self.gates["2"]
                 draw_x = gate_a["x_coord"]
-                draw_y = gate_a["y_coord"]               
+                draw_y = gate_a["y_coord"]     
                 
-                while draw_y != gate_b["y_coord"]:
+                while draw_y != gate_b["y_coord"] or draw_x != gate_b["x_coord"]:
+                    # print(f"x coord {draw_x != gate_b['x_coord']}")
+                    # print(f"y coord {draw_y != gate_b['y_coord']}")
+                    # print(draw_x)
+                    # print(gate_b['x_coord'])
+                    connect = self.coordinates[draw_x][draw_y].connections
                     # north
-                    if draw_y < gate_b["y_coord"]:
+                    if draw_y < gate_b["y_coord"] and not self.coordinates[draw_x][draw_y + 1].connections:
                         draw_y = self.wire_north(draw_x, draw_y)
-                    # south
-                    if draw_y > gate_b["y_coord"]:
-                        draw_y = self.wire_south(draw_x, draw_y)
-
-                while draw_x != gate_b["x_coord"]:
                     # east
-                    if draw_x < gate_b["x_coord"]:
+                    elif draw_x < gate_b["x_coord"] and not self.coordinates[draw_x + 1][draw_y].connections:
                         draw_x = self.wire_east(draw_x, draw_y)
                     # west
-                    if draw_x > gate_b["x_coord"]:
+                    elif draw_x > gate_b["x_coord"] and not self.coordinates[draw_x - 1][draw_y].connections:
                         draw_x = self.wire_west(draw_x, draw_y)
+                    # south
+                    elif draw_y > gate_b["y_coord"] and not  self.coordinates[draw_x][draw_y - 1].connections:
+                        draw_y = self.wire_south(draw_x, draw_y)
+
+
+                    # # north
+                    # elif "north" not in connect:
+                    #     draw_y = self.wire_north(draw_x, draw_y)
+                    # # south
+                    # elif "south" not in connect:
+                    #     draw_y = self.wire_south(draw_x, draw_y)
+                    # # east
+                    # elif "east" not in connect:
+                    #     draw_x = self.wire_east(draw_x, draw_y)
+                    # # west
+                    # elif "west" not in connect:
+                    #     draw_x = self.wire_west(draw_x, draw_y)
 
 
 
 
     def wire_north(self, draw_x, draw_y):
+        print("NORTH")
         self.coordinates[draw_x][draw_y].connections.append("north")
         self.coordinates[draw_x][draw_y + 1].connections.append("south")
 
@@ -126,6 +146,7 @@ class Chip():
         return draw_y
 
     def wire_east(self, draw_x, draw_y):
+        print("EAST")
         self.coordinates[draw_x][draw_y].connections.append("east")
         self.coordinates[draw_x + 1][draw_y].connections.append("west")
 
@@ -134,9 +155,11 @@ class Chip():
     
         plt.plot(x1, y1, 'r')
         draw_x += 1
+        # print(draw_x)
         return draw_x
     
     def wire_south(self, draw_x, draw_y):
+        print("SOUTH")
         self.coordinates[draw_x][draw_y].connections.append("south")
         self.coordinates[draw_x - 1][draw_y].connections.append("north")
 
@@ -148,6 +171,7 @@ class Chip():
         return draw_y
         
     def wire_west(self, draw_x, draw_y):
+        print("WEST")
         self.coordinates[draw_x][draw_y].connections.append("west")
         self.coordinates[draw_x - 1][draw_y].connections.append("east")
         
