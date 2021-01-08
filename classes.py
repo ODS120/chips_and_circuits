@@ -32,8 +32,6 @@ class Chip():
             output = csv.writer(file)
             output.writerow([f"chip_{chip_id}_net_{net_id}", cost])
 
-
-
         plt.xlim([0, self.width - 1])
         plt.ylim([0, self.height - 1])
         # plt.legend()
@@ -149,62 +147,51 @@ class Chip():
                     elif draw_y > gate_b["y_coord"] and "south" not in connect:
                         old_y = draw_y
                         draw_y = self.wire_south(draw_x, draw_y, "r")
+                    
+                    # remove the previously placed wire and use a different route
                     else:
-                        if draw_y != gate_b["y_coord"] or draw_x != gate_b["x_coord"]:
-                            wire_counter -= 2
-                            wires.pop()
-                            
-                            if draw_x != old_x:
-                                # east
-                                if draw_x < old_x:
-                                    draw_x = self.wire_east(draw_x, draw_y, "b")
-                                # west
-                                elif draw_x > old_x:
-                                    draw_x = self.wire_west(draw_x, draw_y, "b")
+                        wire_counter -= 2
+                        wires.pop()
+                        
+                        if draw_x != old_x:
+                            # remove wire
+                            # east
+                            if draw_x < old_x:
+                                draw_x = self.wire_east(draw_x, draw_y, "b")
+                            # west
+                            elif draw_x > old_x:
+                                draw_x = self.wire_west(draw_x, draw_y, "b")
 
-                                # north
-                                if draw_y <= gate_b["y_coord"] and "north" not in connect:
-                                    draw_y = self.wire_north(draw_x, draw_y, "r")
-                                 # south
-                                elif draw_y >= gate_b["y_coord"] and "south" not in connect:
-                                    draw_y = self.wire_south(draw_x, draw_y, "r")  
+                            # north
+                            if draw_y <= gate_b["y_coord"] and "north" not in connect:
+                                draw_y = self.wire_north(draw_x, draw_y, "r")
+                            # south
+                            elif draw_y >= gate_b["y_coord"] and "south" not in connect:
+                                draw_y = self.wire_south(draw_x, draw_y, "r")  
 
-                            elif draw_y != old_y:
-                                # north
-                                if draw_y < old_y:
-                                    draw_y = self.wire_east(draw_x, draw_y, "b")
-                                # south
-                                elif draw_y > old_y:
-                                    draw_x = self.wire_west(draw_x, draw_y, "b")
-
-                                # east
-                                if draw_x <= gate_b["x_coord"] and "east" not in connect:
-                                    draw_x = self.wire_east(draw_x, draw_y, "r")
-                                # west
-                                elif draw_x >= gate_b["x_coord"] and "west" not in connect:
-                                    draw_x = self.wire_west(draw_x, draw_y, "r")
+                        elif draw_y != old_y:
+                            # remove wire
+                            # north
+                            if draw_y < old_y:
+                                draw_y = self.wire_east(draw_x, draw_y, "b")
+                            # south
+                            elif draw_y > old_y:
+                                draw_x = self.wire_west(draw_x, draw_y, "b")
+                            # east
+                            if draw_x <= gate_b["x_coord"] and "east" not in connect:
+                                draw_x = self.wire_east(draw_x, draw_y, "r")
+                            # west
+                            elif draw_x >= gate_b["x_coord"] and "west" not in connect:
+                                draw_x = self.wire_west(draw_x, draw_y, "r")
                         else:
                             break
 
                     wire_counter += 1
                     if f"({draw_x},{draw_y})" not in wires:
                         wires.append(f"({draw_x},{draw_y})")
-            # 
 
                 # print(net,wires)
                 self.save_csv(net, f"[{','.join(wires)}]")
-                    # # north
-                    # elif "north" not in connect:
-                    #     draw_y = self.wire_north(draw_x, draw_y)
-                    # # south
-                    # elif "south" not in connect:
-                    #     draw_y = self.wire_south(draw_x, draw_y)
-                    # # east
-                    # elif "east" not in connect:
-                    #     draw_x = self.wire_east(draw_x, draw_y)
-                    # # west
-                    # elif "west" not in connect:
-                    #     draw_x = self.wire_west(draw_x, draw_y)
         return wire_counter, collision_counter
 
 
@@ -236,7 +223,7 @@ class Chip():
     def wire_south(self, draw_x, draw_y, colour):
         print("SOUTH")
         self.coordinates[draw_x][draw_y].connections.append("south")
-        self.coordinates[draw_x - 1][draw_y].connections.append("north")
+        self.coordinates[draw_x][draw_y - 1].connections.append("north")
 
         x1 = [draw_x, draw_x]
         y1 = [draw_y, draw_y - 1]
