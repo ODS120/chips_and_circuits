@@ -18,18 +18,21 @@ class Chip():
         self.plot_chip()
         self.load_coordinates()
         self.load_gates()
-        # total_cost draw_wires(netlist)
+        # total_cost 
+        n, k = self.draw_wires(netlist)
+        print(n)
+        # costs 
+        cost = n + 300 * k
+        print(cost)
 
-
-        chip_id = os.path.basename(chip_data).replace("print_", "").replace(".csv", "")
+        chip_id = os.path.basename(chip_data).replace("print_", "").replace(".csv",  "")
         net_id = os.path.basename(netlist).replace("netlist_", "").replace(".csv", "")
         print(chip_id, net_id)
         with open('output.csv', 'a', newline='') as file:
             output = csv.writer(file)
-            output.writerow([f"chip_{chip_id}_net_{net_id}"])
+            output.writerow([f"chip_{chip_id}_net_{net_id}", cost])
 
 
-        # chip_<chip_id>_net_<net_id>,<total_cost>, 
 
         plt.xlim([0, self.width - 1])
         plt.ylim([0, self.height - 1])
@@ -101,10 +104,12 @@ class Chip():
 
 
     def draw_wires(self, file):
-      
+        wire_counter = 0
+        collision_counter = 0
+
         with open(file) as netlist:
             next(netlist)
-            cost_counter = 0
+            
             for line in netlist:
                 connection = line.strip("\n").split(",")
                 print(connection[0])
@@ -114,7 +119,9 @@ class Chip():
                 # gate_b = self.gates["2"]
                 draw_x = gate_a["x_coord"]
                 draw_y = gate_a["y_coord"]     
-                
+                old_x = draw_x
+                old_y = draw_y
+
                 net = f"({connection[0]},{connection[1]})"
                 wires = []
                 wires.append(f"({draw_x},{draw_y})")
@@ -124,25 +131,65 @@ class Chip():
                     # print(f"y coord {draw_y != gate_b['y_coord']}")
                     # print(draw_x)
                     # print(gate_b['x_coord'])
+                    
                     connect = self.coordinates[draw_x][draw_y].connections
                     # north
-                    if draw_y < gate_b["y_coord"] and not self.coordinates[draw_x][draw_y + 1].connections:
-                        draw_y = self.wire_north(draw_x, draw_y)
+                    if draw_y < gate_b["y_coord"] and "north" not in connect:
+                        old_y = draw_y
+                        draw_y = self.wire_north(draw_x, draw_y, "r")
                     # east
-                    elif draw_x < gate_b["x_coord"] and not self.coordinates[draw_x + 1][draw_y].connections:
-                        draw_x = self.wire_east(draw_x, draw_y)
+                    elif draw_x < gate_b["x_coord"] and "east" not in connect:
+                        old_x = draw_x
+                        draw_x = self.wire_east(draw_x, draw_y, "r")
                     # west
-                    elif draw_x > gate_b["x_coord"] and not self.coordinates[draw_x - 1][draw_y].connections:
-                        draw_x = self.wire_west(draw_x, draw_y)
+                    elif draw_x > gate_b["x_coord"] and "west" not in connect:
+                        old_x = draw_x
+                        draw_x = self.wire_west(draw_x, draw_y, "r")
                     # south
-                    elif draw_y > gate_b["y_coord"] and not self.coordinates[draw_x][draw_y - 1].connections:
-                        draw_y = self.wire_south(draw_x, draw_y)
+                    elif draw_y > gate_b["y_coord"] and "south" not in connect:
+                        old_y = draw_y
+                        draw_y = self.wire_south(draw_x, draw_y, "r")
                     else:
-                        break
+                        if draw_y != gate_b["y_coord"] or draw_x != gate_b["x_coord"]:
+                            wire_counter -= 2
+                            wires.pop()
+                            
+                            if draw_x != old_x:
+                                # east
+                                if draw_x < old_x:
+                                    draw_x = self.wire_east(draw_x, draw_y, "b")
+                                # west
+                                elif draw_x > old_x:
+                                    draw_x = self.wire_west(draw_x, draw_y, "b")
 
-                    cost_counter += 1
-                    wires.append(f"({draw_x},{draw_y})")
-            # return cost_counter
+                                # north
+                                if draw_y <= gate_b["y_coord"] and "north" not in connect:
+                                    draw_y = self.wire_north(draw_x, draw_y, "r")
+                                 # south
+                                elif draw_y >= gate_b["y_coord"] and "south" not in connect:
+                                    draw_y = self.wire_south(draw_x, draw_y, "r")  
+
+                            elif draw_y != old_y:
+                                # north
+                                if draw_y < old_y:
+                                    draw_y = self.wire_east(draw_x, draw_y, "b")
+                                # south
+                                elif draw_y > old_y:
+                                    draw_x = self.wire_west(draw_x, draw_y, "b")
+
+                                # east
+                                if draw_x <= gate_b["x_coord"] and "east" not in connect:
+                                    draw_x = self.wire_east(draw_x, draw_y, "r")
+                                # west
+                                elif draw_x >= gate_b["x_coord"] and "west" not in connect:
+                                    draw_x = self.wire_west(draw_x, draw_y, "r")
+                        else:
+                            break
+
+                    wire_counter += 1
+                    if f"({draw_x},{draw_y})" not in wires:
+                        wires.append(f"({draw_x},{draw_y})")
+            # 
 
                 # print(net,wires)
                 self.save_csv(net, f"[{','.join(wires)}]")
@@ -158,9 +205,10 @@ class Chip():
                     # # west
                     # elif "west" not in connect:
                     #     draw_x = self.wire_west(draw_x, draw_y)
+        return wire_counter, collision_counter
 
 
-    def wire_north(self, draw_x, draw_y):
+    def wire_north(self, draw_x, draw_y, colour):
         print("NORTH")
         self.coordinates[draw_x][draw_y].connections.append("north")
         self.coordinates[draw_x][draw_y + 1].connections.append("south")
@@ -168,11 +216,11 @@ class Chip():
         x1 = [draw_x, draw_x]
         y1 = [draw_y, draw_y + 1]
     
-        plt.plot(x1, y1, 'r')
+        plt.plot(x1, y1, colour)
         draw_y += 1
         return draw_y
 
-    def wire_east(self, draw_x, draw_y):
+    def wire_east(self, draw_x, draw_y, colour):
         print("EAST")
         self.coordinates[draw_x][draw_y].connections.append("east")
         self.coordinates[draw_x + 1][draw_y].connections.append("west")
@@ -180,12 +228,12 @@ class Chip():
         x1 = [draw_x, draw_x + 1]
         y1 = [draw_y, draw_y]
     
-        plt.plot(x1, y1, 'r')
+        plt.plot(x1, y1, colour)
         draw_x += 1
         # print(draw_x)
         return draw_x
     
-    def wire_south(self, draw_x, draw_y):
+    def wire_south(self, draw_x, draw_y, colour):
         print("SOUTH")
         self.coordinates[draw_x][draw_y].connections.append("south")
         self.coordinates[draw_x - 1][draw_y].connections.append("north")
@@ -193,12 +241,12 @@ class Chip():
         x1 = [draw_x, draw_x]
         y1 = [draw_y, draw_y - 1]
         
-        plt.plot(x1, y1, 'r')
+        plt.plot(x1, y1, colour)
         draw_y -= 1
         return draw_y
         
         
-    def wire_west(self, draw_x, draw_y):
+    def wire_west(self, draw_x, draw_y, colour):
         print("WEST")
         self.coordinates[draw_x][draw_y].connections.append("west")
         self.coordinates[draw_x - 1][draw_y].connections.append("east")
@@ -206,7 +254,7 @@ class Chip():
         x1 = [draw_x, draw_x - 1]
         y1 = [draw_y, draw_y]
         
-        plt.plot(x1, y1, 'r')
+        plt.plot(x1, y1, colour)
         draw_x -= 1
         return draw_x
     
