@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
+import csv
 
+import os
 
 class Chip():
     def __init__(self, chip_data, netlist):
@@ -8,11 +10,26 @@ class Chip():
         self.coordinates = []
         self.gates = {}
 
+        with open('output.csv', 'w', newline='') as file:
+            output = csv.writer(file)
+            output.writerow(["net", "wires"])
+            
         self.load_grid(chip_data)
         self.plot_chip()
         self.load_coordinates()
         self.load_gates()
-        self.draw_wires(netlist)
+        # total_cost draw_wires(netlist)
+
+
+        chip_id = os.path.basename(chip_data).replace("print_", "").replace(".csv", "")
+        net_id = os.path.basename(netlist).replace("netlist_", "").replace(".csv", "")
+        print(chip_id, net_id)
+        with open('output.csv', 'a', newline='') as file:
+            output = csv.writer(file)
+            output.writerow([f"chip_{chip_id}_net_{net_id}"])
+
+
+        # chip_<chip_id>_net_<net_id>,<total_cost>, 
 
         plt.xlim([0, self.width - 1])
         plt.ylim([0, self.height - 1])
@@ -84,9 +101,10 @@ class Chip():
 
 
     def draw_wires(self, file):
+      
         with open(file) as netlist:
             next(netlist)
-
+            cost_counter = 0
             for line in netlist:
                 connection = line.strip("\n").split(",")
                 print(connection[0])
@@ -97,6 +115,10 @@ class Chip():
                 draw_x = gate_a["x_coord"]
                 draw_y = gate_a["y_coord"]     
                 
+                net = f"({connection[0]},{connection[1]})"
+                wires = []
+                wires.append(f"({draw_x},{draw_y})")
+
                 while draw_y != gate_b["y_coord"] or draw_x != gate_b["x_coord"]:
                     # print(f"x coord {draw_x != gate_b['x_coord']}")
                     # print(f"y coord {draw_y != gate_b['y_coord']}")
@@ -113,10 +135,17 @@ class Chip():
                     elif draw_x > gate_b["x_coord"] and not self.coordinates[draw_x - 1][draw_y].connections:
                         draw_x = self.wire_west(draw_x, draw_y)
                     # south
-                    elif draw_y > gate_b["y_coord"] and not  self.coordinates[draw_x][draw_y - 1].connections:
+                    elif draw_y > gate_b["y_coord"] and not self.coordinates[draw_x][draw_y - 1].connections:
                         draw_y = self.wire_south(draw_x, draw_y)
+                    else:
+                        break
 
+                    cost_counter += 1
+                    wires.append(f"({draw_x},{draw_y})")
+            # return cost_counter
 
+                # print(net,wires)
+                self.save_csv(net, f"[{','.join(wires)}]")
                     # # north
                     # elif "north" not in connect:
                     #     draw_y = self.wire_north(draw_x, draw_y)
@@ -129,8 +158,6 @@ class Chip():
                     # # west
                     # elif "west" not in connect:
                     #     draw_x = self.wire_west(draw_x, draw_y)
-
-
 
 
     def wire_north(self, draw_x, draw_y):
@@ -170,6 +197,7 @@ class Chip():
         draw_y -= 1
         return draw_y
         
+        
     def wire_west(self, draw_x, draw_y):
         print("WEST")
         self.coordinates[draw_x][draw_y].connections.append("west")
@@ -182,7 +210,12 @@ class Chip():
         draw_x -= 1
         return draw_x
     
-
+# (1,2),"[(1,5),(2,5),(3,5),(4,5),(5,5),(6,5)]"
+    def save_csv(self, net, wires):
+        with open('output.csv', 'a', newline='') as file:
+            output = csv.writer(file)
+            output.writerow([net,wires])
+            
 
 
 
