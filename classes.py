@@ -134,19 +134,19 @@ class Chip():
                     # north
                     if draw_y < gate_b["y_coord"] and "north" not in connect:
                         old_y = draw_y
-                        draw_y = self.wire_north(draw_x, draw_y, "r")
+                        draw_x, draw_y = self.wire(draw_x, draw_y, "r", "north")
                     # east
                     elif draw_x < gate_b["x_coord"] and "east" not in connect:
                         old_x = draw_x
-                        draw_x = self.wire_east(draw_x, draw_y, "r")
+                        draw_x, draw_y = self.wire(draw_x, draw_y, "r", "east")
                     # west
                     elif draw_x > gate_b["x_coord"] and "west" not in connect:
                         old_x = draw_x
-                        draw_x = self.wire_west(draw_x, draw_y, "r")
+                        draw_x, draw_y = self.wire(draw_x, draw_y, "r", "west")
                     # south
                     elif draw_y > gate_b["y_coord"] and "south" not in connect:
                         old_y = draw_y
-                        draw_y = self.wire_south(draw_x, draw_y, "r")
+                        draw_x, draw_y = self.wire(draw_x, draw_y, "r", "south")
                     
                     # remove the previously placed wire and use a different route
                     else:
@@ -157,32 +157,32 @@ class Chip():
                             # remove wire
                             # east
                             if draw_x < old_x:
-                                draw_x = self.wire_east(draw_x, draw_y, "b")
+                                draw_x, draw_y = self.wire(draw_x, draw_y, "b", "east")
                             # west
                             elif draw_x > old_x:
-                                draw_x = self.wire_west(draw_x, draw_y, "b")
+                                draw_x, draw_y = self.wire(draw_x, draw_y, "b", "west")
 
                             # north
                             if draw_y <= gate_b["y_coord"] and "north" not in connect:
-                                draw_y = self.wire_north(draw_x, draw_y, "r")
+                                draw_x, draw_y = self.wire(draw_x, draw_y, "r", "north")
                             # south
                             elif draw_y >= gate_b["y_coord"] and "south" not in connect:
-                                draw_y = self.wire_south(draw_x, draw_y, "r")  
+                                draw_x, draw_y = self.wire(draw_x, draw_y, "r", "south")  
 
                         elif draw_y != old_y:
                             # remove wire
                             # north
                             if draw_y < old_y:
-                                draw_y = self.wire_east(draw_x, draw_y, "b")
+                                draw_x, draw_y = self.wire(draw_x, draw_y, "b", "north")
                             # south
                             elif draw_y > old_y:
-                                draw_x = self.wire_west(draw_x, draw_y, "b")
+                                draw_x, draw_y = self.wire(draw_x, draw_y, "b", "south")
                             # east
                             if draw_x <= gate_b["x_coord"] and "east" not in connect:
-                                draw_x = self.wire_east(draw_x, draw_y, "r")
+                                draw_x, draw_y = self.wire(draw_x, draw_y, "r", "east")
                             # west
                             elif draw_x >= gate_b["x_coord"] and "west" not in connect:
-                                draw_x = self.wire_west(draw_x, draw_y, "r")
+                                draw_x, draw_y = self.wire(draw_x, draw_y, "r", "west")
                         else:
                             break
 
@@ -195,55 +195,47 @@ class Chip():
         return wire_counter, collision_counter
 
 
-    def wire_north(self, draw_x, draw_y, colour):
-        print("NORTH")
-        self.coordinates[draw_x][draw_y].connections.append("north")
-        self.coordinates[draw_x][draw_y + 1].connections.append("south")
+    def wire(self, draw_x, draw_y, colour, direction):
+        # add direction to current coordinate
+        self.coordinates[draw_x][draw_y].connections.append(direction)
 
-        x1 = [draw_x, draw_x]
-        y1 = [draw_y, draw_y + 1]
-    
-        plt.plot(x1, y1, colour)
-        draw_y += 1
-        return draw_y
+        if direction == "north" or direction == "south":
+            # hold the x-coordinates of the line
+            x1 = [draw_x, draw_x]
 
-    def wire_east(self, draw_x, draw_y, colour):
-        print("EAST")
-        self.coordinates[draw_x][draw_y].connections.append("east")
-        self.coordinates[draw_x + 1][draw_y].connections.append("west")
+            # calculate a line to the north
+            if direction == "north":
+                self.coordinates[draw_x][draw_y + 1].connections.append("south")
+                y1 = [draw_y, draw_y + 1]
+                draw_y += 1
+            # calculate a line to the south
+            else:
+                self.coordinates[draw_x][draw_y - 1].connections.append("north")
+                y1 = [draw_y, draw_y - 1]
+                draw_y -= 1
+        
+        elif direction == "east" or direction == "west":
+            # hold the y-coordinates of the line
+            y1 = [draw_y, draw_y]
 
-        x1 = [draw_x, draw_x + 1]
-        y1 = [draw_y, draw_y]
-    
-        plt.plot(x1, y1, colour)
-        draw_x += 1
-        # print(draw_x)
-        return draw_x
-    
-    def wire_south(self, draw_x, draw_y, colour):
-        print("SOUTH")
-        self.coordinates[draw_x][draw_y].connections.append("south")
-        self.coordinates[draw_x][draw_y - 1].connections.append("north")
+            # calculate a line to the east
+            if direction == "east":
+                self.coordinates[draw_x + 1][draw_y].connections.append("west")
+                x1 = [draw_x + 1, draw_x]
+                draw_x += 1
+            # calculate a line to the west
+            else:
+                self.coordinates[draw_x - 1][draw_y].connections.append("east")
+                x1 = [draw_x - 1, draw_x]
+                draw_x -= 1
 
-        x1 = [draw_x, draw_x]
-        y1 = [draw_y, draw_y - 1]
-        
+        # draw the line        
         plt.plot(x1, y1, colour)
-        draw_y -= 1
-        return draw_y
-        
-        
-    def wire_west(self, draw_x, draw_y, colour):
-        print("WEST")
-        self.coordinates[draw_x][draw_y].connections.append("west")
-        self.coordinates[draw_x - 1][draw_y].connections.append("east")
-        
-        x1 = [draw_x, draw_x - 1]
-        y1 = [draw_y, draw_y]
-        
-        plt.plot(x1, y1, colour)
-        draw_x -= 1
-        return draw_x
+        print(colour)
+
+        # return current position on the grid
+        return draw_x, draw_y
+       
     
 # (1,2),"[(1,5),(2,5),(3,5),(4,5),(5,5),(6,5)]"
     def save_csv(self, net, wires):
@@ -251,8 +243,6 @@ class Chip():
             output = csv.writer(file)
             output.writerow([net,wires])
             
-
-
 
 class Coordinate(): 
     def __init__(self, x, y):
