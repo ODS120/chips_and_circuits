@@ -258,3 +258,16 @@ class Gate():
         self.gate_id = gate_id
         self.x_coord = x
         self.y_coord = y
+
+class Wire(): 
+    def __init__(self, wire_id, start_node):
+        self.wire_id = wire_id
+        self.start_node = start_node
+        self.nodes = []
+        self.total_cost = 0
+
+    def add_wire(self, to_node, cost):
+        # stores node objects
+        self.nodes.append(to_node)
+        self.total_cost += cost
+
