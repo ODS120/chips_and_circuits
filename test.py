@@ -9,59 +9,51 @@ class Chip():
         self.width = 0
         self.coordinates = []
         self.gates = {}
+        self.wires = 0
 
         with open('output.csv', 'w', newline='') as file:
             output = csv.writer(file)
             output.writerow(["net", "wires"])
-            
+        
+        # Prepare the chip to be worked with
         self.load_grid(chip_data)
         self.load_coordinates()
         self.load_gates()
 
+        # Manage the visual reprentation of the grid
+        plt.xlim([0, self.width - 1])
+        plt.ylim([0, self.height - 1])
+        plt.axis('off')
+
         with open(netlist) as connections:
             next(connections)
 
+            # Iterate seperately through all connections
             for line in connections:
                 connect_gates = line.strip("\n").split(",")
 
-                connect = (connect_gates[0], connect_gates[1])
+                # Connect two gates
                 path = self.move(connect_gates[0], connect_gates[1])
 
+                # Draw the wires
                 for wires in range(len(path) - 1):
+                    self.wires += 1
                     self.wire(path[wires], path[wires + 1], "r")
                 
-                self.save_csv(connect, path)
+                # File the results
+                self.save_csv((connect_gates[0], connect_gates[1]), path)
 
-                plt.xlim([0, self.width - 1])
-                plt.ylim([0, self.height - 1])
-                # plt.xticks([])
-                # plt.yticks([])
-                plt.axis('off')
-                plt.show()
+                # Visualize the solution
                 plt.savefig('test.png')
-        
-        # # total_cost 
-        # n, k = self.draw_wires(netlist)
-        # print(n)
-        # # costs 
-        # cost = n + 300 * k
-        # print(cost)
-
-        plt.xlim([0, self.width - 1])
-        plt.ylim([0, self.height - 1])
-        # plt.legend()
-        # plt.xticks([])
-        # plt.yticks([])
-        # plt.axis('off')
-        plt.show()
-        plt.savefig('test.png')
-        cost = 0
+    
+        # Filter id names
         chip_id = os.path.basename(chip_data).replace("print_", "").replace(".csv",  "")
         net_id = os.path.basename(netlist).replace("netlist_", "").replace(".csv", "")
-        print(chip_id, net_id)
+
+        # Add last line to the file
         with open('output.csv', 'a', newline='') as file:
             output = csv.writer(file)
-            output.writerow([f"chip_{chip_id}_net_{net_id}", cost])
+            output.writerow([f"chip_{chip_id}_net_{net_id}", self.wires])
 
 
     # load the grid
