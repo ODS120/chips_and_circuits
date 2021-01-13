@@ -10,6 +10,7 @@ class Chip():
         self.coordinates = []
         self.gates = {}
         self.wires = 0
+        self.wiring_coords = []
 
         with open('output.csv', 'w', newline='') as file:
             output = csv.writer(file)
@@ -39,7 +40,7 @@ class Chip():
                 for wires in range(len(path) - 1):
                     self.wires += 1
                     self.wire(path[wires], path[wires + 1], "r")
-                
+
                 # File the results
                 self.save_csv((connect_gates[0], connect_gates[1]), path)
 

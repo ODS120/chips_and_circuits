@@ -1,7 +1,7 @@
 
 
 from sys import argv
-from classes import Chip#, Coordinate, Gate
+from test import Chip#, Coordinate, Gate
 
 if __name__ == "__main__":
     # check command line arguments
@@ -15,15 +15,4 @@ if __name__ == "__main__":
 
     
 
-# import csv
-# with open('innovators.csv', 'w', newline='') as file:
-#     writer = csv.writer(file)
-#     writer.writerow(["SN", "Name", "Contribution"])
-#     writer.writerow([1, "Linus Torvalds", "Linux Kernel"])
-#     writer.writerow([2, "Tim Berners-Lee", "World Wide Web"])
-#     writer.writerow([3, "Guido van Rossum", "Python Programming"])
 
-# SN,Name,Contribution
-# 1,Linus Torvalds,Linux Kernel
-# 2,Tim Berners-Lee,World Wide Web
-# 3,Guido van Rossum,Python Programming

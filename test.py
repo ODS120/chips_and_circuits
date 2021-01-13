@@ -51,6 +51,10 @@ class Chip():
         chip_id = os.path.basename(chip_data).replace("print_", "").replace(".csv",  "")
         net_id = os.path.basename(netlist).replace("netlist_", "").replace(".csv", "")
 
+        with open('dimensions.csv', 'w') as file:
+            output = csv.writer(file)
+            output.writerow([self.width, self.height, self.depth])
+
         # Add last line to the file
         with open('output.csv', 'a', newline='') as file:
             output = csv.writer(file)
@@ -139,9 +143,17 @@ class Chip():
     
 
     def save_csv(self, net, wires):
-        with open('output.csv', 'a', newline='') as file:
-            output = csv.writer(file)
+        with open('output.csv', 'a', newline='') as results:
+            output = csv.writer(results)
             output.writerow([net,wires])
+        
+    #     with open('3dmodel.csv') as model_file:
+
+    #         next(output)
+    
+
+    # def model_prep(self):
+
 
 
     def move(self, source_gate, target_gate):
@@ -198,6 +210,7 @@ class Chip():
 
                 if next_door[2] > self.depth:
                     self.depth += 1
+                    print(self.depth)
                     self.load_coordinates(next_door[2])
 
                 # Check if the node is off the grid
