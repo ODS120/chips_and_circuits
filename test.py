@@ -20,27 +20,32 @@ class Chip():
         
         # Prepare the chip to be worked with
         self.load_grid(chip_data)
-        self.load_coordinates(0)
-        self.load_gates()
 
-        # Manage the visual reprentation of the grid
-        plt.xlim([0, self.width - 1])
-        plt.ylim([0, self.height - 1])
-        # plt.axis('off')
 
         with open(netlist) as connections:
             next(connections)
-            ordered_connections = copy.deepcopy(connections)
-            restart == True
+            connections = [connect.strip('\n') for connect in connections]
+            # print(connections)
+            # ordered_connections = copy.deepcopy(connections)
+            restart = True
 
             while restart:
 
-            random.shuffle(connections)
+                self.load_coordinates(0)
+                self.load_gates()
+
+                # Manage the visual reprentation of the grid
+                plt.xlim([0, self.width - 1])
+                plt.ylim([0, self.height - 1])
+                # plt.axis('off')
+                print(connections)
+                random.shuffle(connections)
+                connections.append('')
                 # Iterate seperately through all connections
-            
+                print(connections)
                 for line in connections:
                     if line == '':
-                        restart == False
+                        restart = False
                         break
 
                     connect_gates = line.strip("\n").split(",")
@@ -49,6 +54,7 @@ class Chip():
                     path = self.move(connect_gates[0], connect_gates[1])
 
                     if path == None:
+                        del connections[-1]
                         break
 
                     print(path)
@@ -183,12 +189,19 @@ class Chip():
         target_coords = [self.gates[target_gate]["x_coord"], self.gates[target_gate]["y_coord"], 0]
         
         (x, y, z) = target_coords
+        print(target_coords)
         neighbours = [(x-1, y, z), (x, y-1, z), (x, y+1, z), (x+1, y, z), (x, y, z+1), (x, y, z-1)]
 
         for nodes in neighbours:
-            if not self.coordinates[z][y][x].connections[nodes[0], nodes[1], nodes[2]].used:
-                break
+            # print("test")
+            if nodes[2] < 0:
+                # print("test")
+                return None
 
+            elif self.coordinates[nodes[2]][nodes[1]][nodes[0]].cost < 300:
+                # print("test")
+                break
+            
             elif nodes == (x, y, z-1):
                 return None
 
@@ -234,8 +247,8 @@ class Chip():
 
             neighbours = [(x-1, y, z), (x, y-1, z), (x, y+1, z), (x+1, y, z), (x, y, z+1), (x, y, z-1)]
             # print(neighbours)
-             # Loop neighbours
-            print(current_node.position)
+            # Loop neighbours
+            # print(current_node.position)
             for next_door in neighbours:
                 # print(next_door)
                 if next_door[2] < 0:
@@ -245,7 +258,7 @@ class Chip():
                 if next_door[2] > self.depth:
                     # print(next_door)
                     self.depth += 1
-                    print(self.depth)
+                    # print(self.depth)
                     self.load_coordinates(next_door[2])
                     self.calculate_distance(target_coords)
 
