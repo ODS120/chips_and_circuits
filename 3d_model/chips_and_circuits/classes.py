@@ -7,7 +7,6 @@ class Chip():
     def __init__(self, chip_data, netlist):
         self.height = 0
         self.width = 0
-        self.depth = 0
         self.coordinates = []
         self.gates = {}
         self.wires = 0
@@ -18,13 +17,13 @@ class Chip():
         
         # Prepare the chip to be worked with
         self.load_grid(chip_data)
-        self.load_coordinates(0)
+        self.load_coordinates()
         self.load_gates()
 
         # Manage the visual reprentation of the grid
         plt.xlim([0, self.width - 1])
         plt.ylim([0, self.height - 1])
-        # plt.axis('off')
+        plt.axis('off')
 
         with open(netlist) as connections:
             next(connections)
@@ -35,7 +34,7 @@ class Chip():
 
                 # Connect two gates
                 path = self.move(connect_gates[0], connect_gates[1])
-                print(path)
+
                 # Draw the wires
                 for wires in range(len(path) - 1):
                     self.wires += 1
@@ -50,10 +49,6 @@ class Chip():
         # Filter id names
         chip_id = os.path.basename(chip_data).replace("print_", "").replace(".csv",  "")
         net_id = os.path.basename(netlist).replace("netlist_", "").replace(".csv", "")
-
-        with open('dimensions.csv', 'w') as file:
-            output = csv.writer(file)
-            output.writerow([self.width, self.height, self.depth])
 
         # Add last line to the file
         with open('output.csv', 'a', newline='') as file:
@@ -79,16 +74,15 @@ class Chip():
             
             # add borders to the grid
             self.width += 2
-            self.height += 2 
+            self.height += 2
+
+            # fill the grid
+            self.coordinates = [[0 for x in range(self.width)] for y in range(self.height)]         
 
 
     # load all the coordinate classes
-    def load_coordinates(self, z):
-        # fill the grid
-        self.coordinates.append([[0 for x in range(self.width)] for y in range(self.height)])
-        
+    def load_coordinates(self):
         # iterate over all the grid coordinates
-        # TODO draai de x en y waarde om, nu is verwarrend
         for y in range(self.height):
             for x in range(self.width):
                 x1 = [x, x+1]
@@ -97,25 +91,21 @@ class Chip():
                 y2 = [y, y+1]
                 plt.plot(x1, y1, 'b', x2, y2, 'b')
 
-                coordinate = Coordinate(x, y, z)
-
-                if z > 0:
-                    coordinate.connections[x, y, z - 1] = Wire(x, y, z - 1)
-                    self.coordinates[z-1][y][x].connections[x, y, z] = Wire(x, y, z)
+                coordinate = Coordinate(x, y)
 
                 if y >= 0 and y < self.height:
-                    coordinate.connections[x, y + 1, z] = Wire(x, y + 1, z)
+                    coordinate.connections[x, y + 1] = Wire(x, y + 1)
 
                 if y > 0 and y <= self.height:
-                    coordinate.connections[x, y - 1, z] = Wire(x, y - 1, z)
+                    coordinate.connections[x, y - 1] = Wire(x, y - 1)
 
                 if x >= 0 and x < self.width:
-                    coordinate.connections[x + 1, y, z] = Wire(x + 1, y, z)
+                    coordinate.connections[x + 1, y] = Wire(x + 1, y)
 
                 if x > 0 and x <= self.width:
-                    coordinate.connections[x - 1, y, z] = Wire(x - 1, y, z)
+                    coordinate.connections[x - 1, y] = Wire(x - 1, y)
                 
-                self.coordinates[z][y][x] = coordinate
+                self.coordinates[y][x] = coordinate
 
 
     # load all the gate classes
@@ -131,48 +121,37 @@ class Chip():
             plt.annotate(f"{gate_id}", (gate["x_coord"], gate["y_coord"]), fontsize = 13, ha = "center", va = "center")
 
             # appoint the gate its position on the grid
-            self.coordinates[0][gate["y_coord"]][gate["x_coord"]].gate = gate_object
+            self.coordinates[gate["y_coord"]][gate["x_coord"]].gate = gate_object
 
 
     def wire(self, source, goal, colour): #direction
         #print(f"source: {source}")
-        x = [source[0], goal[0]]
-        y = [source[1], goal[1]]
-        z = [source[2], goal[2]]
-        plt.plot(x, y, colour)
+        x1 = [source[0], goal[0]]
+        y1 = [source[1], goal[1]]
+        plt.plot(x1, y1, colour)
     
 
     def save_csv(self, net, wires):
-        with open('output.csv', 'a', newline='') as results:
-            output = csv.writer(results)
+        with open('output.csv', 'a', newline='') as file:
+            output = csv.writer(file)
             output.writerow([net,wires])
-        
-    #     with open('3dmodel.csv') as model_file:
-
-    #         next(output)
-    
-
-    # def model_prep(self):
-
 
 
     def move(self, source_gate, target_gate):
         crossroad = [] #open
         travelled_path = [] #closed
 
-        # Source and target always on z-axis 0
-        source_coords = [self.gates[source_gate]["x_coord"], self.gates[source_gate]["y_coord"], 0]
-        target_coords = [self.gates[target_gate]["x_coord"], self.gates[target_gate]["y_coord"], 0]
+        source_coords = [self.gates[source_gate]["x_coord"], self.gates[source_gate]["y_coord"]]
+        target_coords = [self.gates[target_gate]["x_coord"], self.gates[target_gate]["y_coord"]]
 
-        start_node = Node(source_coords, None, 300)
-        goal_node = Node(target_coords, None, 300)
+        start_node = Node(source_coords, None)
+        goal_node = Node(target_coords, None)
 
         crossroad.append(start_node)
 
         while len(crossroad) > 0:
-            # crossroad.sort()
+            crossroad.sort()
             current_node = crossroad.pop(0)
-            travelled_path.append(current_node)
 
             # Check if we have reached the goal, return the path
             if current_node == goal_node:
@@ -182,12 +161,11 @@ class Chip():
                 while current_node != start_node:
                     x = current_node.position[0]
                     y = current_node.position[1]
-                    z = current_node.position[2]
                     parent_coords = current_node.parent.position
+
                     # set wire between coordinates
-                    self.coordinates[z][y][x].connections[parent_coords[0], parent_coords[1], parent_coords[2]].used = True
-                    self.coordinates[parent_coords[2]][parent_coords[1]][parent_coords[0]].connections[x, y, z].used = True
-                    self.coordinates[z][y][x].cost = 300
+                    self.coordinates[y][x].connections[parent_coords[0], parent_coords[1]].used = True
+                    self.coordinates[parent_coords[1]][parent_coords[0]].connections[x, y].used = True
 
                     path.append(current_node.position)
                     current_node = current_node.parent
@@ -197,88 +175,59 @@ class Chip():
                 # Return reversed path
                 return path[::-1]
 
-            # print(self.coordinates[z][y][x].connections[parent_coords[0], parent_coords[1], parent_coords[2]])
+            (x, y) = current_node.position
 
-            (x, y, z) = current_node.position
+            neighbours = [(x-1, y), (x, y-1), (x, y+1), (x+1, y)]
 
-            neighbours = [(x-1, y, z), (x, y-1, z), (x, y+1, z), (x+1, y, z), (x, y, z+1), (x, y, z-1)]
-            print(neighbours)
              # Loop neighbours
             for next_door in neighbours:
-                print(next_door)
-                if next_door[2] < 0:
-                    print("no 3d")
-                    continue
-
-                if next_door[2] > self.depth:
-                    print(next_door)
-                    self.depth += 1
-                    print(next_door)
-                    self.load_coordinates(next_door[2])
 
                 # Check if the node is off the grid
                 if next_door[0] < 0 or next_door[0] > self.width - 1 or next_door[1] < 0 or next_door[1] > self.height - 1:
-                    print("off grid")
                     continue
 
                 # Check whether a connection is already being used
-                if self.coordinates[z][y][x].connections[next_door].used:
-                    print("used")
+                if self.coordinates[y][x].connections[next_door].used:
                     continue
 
                 # Create a neighbor node
-                neighbour = Node(next_door, current_node, self.coordinates[next_door[2]][next_door[1]][next_door[0]].cost)
-
-                if neighbour != goal_node and self.coordinates[next_door[2]][next_door[1]][next_door[0]].gate != None:
+                neighbour = Node(next_door, current_node)
+                # print (self.coordinates[next_door[1]][next_door[0]].gate)
+                print(next_door)
+                if neighbour != goal_node and self.coordinates[next_door[1]][next_door[0]].gate != None:
+                    print("test")
                     continue
 
                 # Check if the neighbor is in the closed list
                 if neighbour in travelled_path:
                     continue
 
+                # Generate heuristics (Manhattan distance)
+                neighbour.cost += 1 
+
                 # Check if neighbor is in open list and if it has a lower cost value
-                if(self.add_to_open(crossroad, neighbour, goal_node) == True):
+                if(self.add_to_open(crossroad, neighbour) == True):
                     # Everything is green, add neighbor to open list
                     crossroad.append(neighbour)
-        
-        path = []
+
         # Return None, no path is found
-        while current_node != start_node:
-            print("test")
-            x = current_node.position[0]
-            y = current_node.position[1]
-            z = current_node.position[2]
-            parent_coords = current_node.parent.position
-            # set wire between coordinates
-            self.coordinates[z][y][x].connections[parent_coords[0], parent_coords[1], parent_coords[2]].used = True
-            self.coordinates[parent_coords[2]][parent_coords[1]][parent_coords[0]].connections[x, y, z].used = True
-            self.coordinates[z][y][x].cost = 300
-
-            path.append(current_node.position)
-            current_node = current_node.parent
-
-        path.append(source_coords) 
-
-        # Return reversed path
-        return path[::-1]
-        # return None
+        return None
 
 
     # Check if a neighbor should be added to open list
-    def add_to_open(self, crossroad, neighbour, goal_node):
+    def add_to_open(self, crossroad, neighbour):
         for node in crossroad:
-            pass
-            if (neighbour.cost == 300 and neighbour != goal_node):
+            if (neighbour == node and neighbour.cost >= node.cost):
                 return False
 
         return True
 
 
 class Node():
-    def __init__(self, position, parent, cost):
-        self.position = [position[0], position[1], position[2]]
+    def __init__(self, position, parent):
+        self.position = [position[0], position[1]]
         self.parent = parent
-        self.cost = cost
+        self.cost = 0
     
     # Compare nodes
     def __eq__(self, other):
@@ -290,14 +239,12 @@ class Node():
 
 
 class Coordinate(): 
-    def __init__(self, x, y, z):
+    def __init__(self, x, y):
         self.x_coord = x
         self.y_coord = y
-        self.z_coord = z
         self.gate = None
         # north, east, south, west, up, down
-        self.connections = {}
-        self.cost = 1   
+        self.connections = {}   
 
 
 class Gate():
@@ -306,15 +253,14 @@ class Gate():
         self.x_coord = x
         self.y_coord = y
 
-
 class Wire():
     # stores wire found by algorithm 
-    def __init__(self, x, y, z):
+    def __init__(self, x, y):
         # self.wire_id = wire_id
         self.x = x
         self.y = y
-        self.z = z
         self.used = False
+        
         self.total_cost = 0
 
     def add_wire(self, to_node, cost):
