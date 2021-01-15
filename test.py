@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import csv
+import random
+import copy
 
 import os
 
@@ -28,24 +30,38 @@ class Chip():
 
         with open(netlist) as connections:
             next(connections)
+            ordered_connections = copy.deepcopy(connections)
+            restart == True
 
-            # Iterate seperately through all connections
-            for line in connections:
-                connect_gates = line.strip("\n").split(",")
+            while restart:
 
-                # Connect two gates
-                path = self.move(connect_gates[0], connect_gates[1])
-                print(path)
-                # Draw the wires
-                for wires in range(len(path) - 1):
-                    self.wires += 1
-                    self.wire(path[wires], path[wires + 1], "r")
-                
-                # File the results
-                self.save_csv((connect_gates[0], connect_gates[1]), path)
+            random.shuffle(connections)
+                # Iterate seperately through all connections
+            
+                for line in connections:
+                    if line == '':
+                        restart == False
+                        break
 
-                # Visualize the solution
-                plt.savefig('test.png')
+                    connect_gates = line.strip("\n").split(",")
+
+                    # Connect two gates
+                    path = self.move(connect_gates[0], connect_gates[1])
+
+                    if path == None:
+                        break
+
+                    print(path)
+                    # Draw the wires
+                    for wires in range(len(path) - 1):
+                        self.wires += 1
+                        self.wire(path[wires], path[wires + 1], "r")
+                    
+                    # File the results
+                    self.save_csv((connect_gates[0], connect_gates[1]), path)
+
+                    # Visualize the solution
+                    plt.savefig('test.png')
     
         # Filter id names
         chip_id = os.path.basename(chip_data).replace("print_", "").replace(".csv",  "")
@@ -157,20 +173,34 @@ class Chip():
 
 
     def move(self, source_gate, target_gate):
+        
+
         crossroad = [] #open
         travelled_path = [] #closed
 
         # Source and target always on z-axis 0
         source_coords = [self.gates[source_gate]["x_coord"], self.gates[source_gate]["y_coord"], 0]
         target_coords = [self.gates[target_gate]["x_coord"], self.gates[target_gate]["y_coord"], 0]
+        
+        (x, y, z) = target_coords
+        neighbours = [(x-1, y, z), (x, y-1, z), (x, y+1, z), (x+1, y, z), (x, y, z+1), (x, y, z-1)]
 
-        start_node = Node(source_coords, None, 300)
-        goal_node = Node(target_coords, None, 300)
+        for nodes in neighbours:
+            if not self.coordinates[z][y][x].connections[nodes[0], nodes[1], nodes[2]].used:
+                break
+
+            elif nodes == (x, y, z-1):
+                return None
+
+        self.calculate_distance(target_coords)
+
+        start_node = Node(source_coords, None, 0)
+        goal_node = Node(target_coords, None, 0)
 
         crossroad.append(start_node)
 
         while len(crossroad) > 0:
-            # crossroad.sort()
+            crossroad.sort()
             current_node = crossroad.pop(0)
             travelled_path.append(current_node)
 
@@ -187,7 +217,8 @@ class Chip():
                     # set wire between coordinates
                     self.coordinates[z][y][x].connections[parent_coords[0], parent_coords[1], parent_coords[2]].used = True
                     self.coordinates[parent_coords[2]][parent_coords[1]][parent_coords[0]].connections[x, y, z].used = True
-                    self.coordinates[z][y][x].cost = 300
+                    if current_node != goal_node and current_node != start_node:
+                        self.coordinates[z][y][x].cost = 300
 
                     path.append(current_node.position)
                     current_node = current_node.parent
@@ -202,32 +233,35 @@ class Chip():
             (x, y, z) = current_node.position
 
             neighbours = [(x-1, y, z), (x, y-1, z), (x, y+1, z), (x+1, y, z), (x, y, z+1), (x, y, z-1)]
-            print(neighbours)
+            # print(neighbours)
              # Loop neighbours
+            print(current_node.position)
             for next_door in neighbours:
-                print(next_door)
+                # print(next_door)
                 if next_door[2] < 0:
-                    print("no 3d")
+                    # print("no 3d")
                     continue
 
                 if next_door[2] > self.depth:
-                    print(next_door)
+                    # print(next_door)
                     self.depth += 1
-                    print(next_door)
+                    print(self.depth)
                     self.load_coordinates(next_door[2])
+                    self.calculate_distance(target_coords)
 
                 # Check if the node is off the grid
                 if next_door[0] < 0 or next_door[0] > self.width - 1 or next_door[1] < 0 or next_door[1] > self.height - 1:
-                    print("off grid")
+                    # print("off grid")
                     continue
 
                 # Check whether a connection is already being used
                 if self.coordinates[z][y][x].connections[next_door].used:
-                    print("used")
+                    # print("used")
                     continue
 
+                next_node = self.coordinates[next_door[2]][next_door[1]][next_door[0]]
                 # Create a neighbor node
-                neighbour = Node(next_door, current_node, self.coordinates[next_door[2]][next_door[1]][next_door[0]].cost)
+                neighbour = Node(next_door, current_node, next_node.cost + next_node.distance_to_goal)
 
                 if neighbour != goal_node and self.coordinates[next_door[2]][next_door[1]][next_door[0]].gate != None:
                     continue
@@ -244,7 +278,7 @@ class Chip():
         path = []
         # Return None, no path is found
         while current_node != start_node:
-            print("test")
+            # print("test")
             x = current_node.position[0]
             y = current_node.position[1]
             z = current_node.position[2]
@@ -264,13 +298,27 @@ class Chip():
         # return None
 
 
+    def calculate_distance(self, target_coords):
+        # print(f"target: {target_coords}")
+        # print(f"target x: {target_coords[0]}")
+        for z in self.coordinates:
+            for y in z:
+                for x in y:
+                    x.distance_to_goal = abs(x.x_coord - target_coords[0])
+                    x.distance_to_goal += abs(x.y_coord - target_coords[1])
+                    x.distance_to_goal += abs(x.z_coord - target_coords[2])
+                    # print(x.x_coord, x.y_coord, x.z_coord)
+                    # print(x.distance_to_goal)
+
+
     # Check if a neighbor should be added to open list
     def add_to_open(self, crossroad, neighbour, goal_node):
+        # print(crossroad)
         for node in crossroad:
-            pass
-            if (neighbour.cost == 300 and neighbour != goal_node):
+            if node.cost < neighbour.cost and node != goal_node:
+                # print(node.cost, neighbour.cost)
                 return False
-
+        
         return True
 
 
@@ -288,6 +336,10 @@ class Node():
     def __lt__(self, other):
          return self.cost < other.cost
 
+        # Print node
+    def __repr__(self):
+        return ('({0},{1})'.format(self.position, self.cost))
+
 
 class Coordinate(): 
     def __init__(self, x, y, z):
@@ -297,7 +349,8 @@ class Coordinate():
         self.gate = None
         # north, east, south, west, up, down
         self.connections = {}
-        self.cost = 1   
+        self.cost = 1
+        self.distance_to_goal = 0 
 
 
 class Gate():
