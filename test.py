@@ -13,10 +13,6 @@ class Chip():
         self.coordinates = []
         self.gates = {}
         self.wires = 0
-
-        with open('output.csv', 'w', newline='') as file:
-            output = csv.writer(file)
-            output.writerow(["net", "wires"])
         
         # Prepare the chip to be worked with
         self.load_grid(chip_data)
@@ -25,12 +21,20 @@ class Chip():
         with open(netlist) as connections:
             next(connections)
             connections = [connect.strip('\n') for connect in connections]
+            del connections[-1]
             # print(connections)
             # ordered_connections = copy.deepcopy(connections)
             restart = True
 
             while restart:
+                with open('output.csv', 'w', newline='') as file:
+                    output = csv.writer(file)
+                    output.writerow(["net", "wires"])
 
+                print("test")
+                self.coordinates = []
+                # self.gates = {}
+                self.depth = 0
                 self.load_coordinates(0)
                 self.load_gates()
 
@@ -38,18 +42,18 @@ class Chip():
                 plt.xlim([0, self.width - 1])
                 plt.ylim([0, self.height - 1])
                 # plt.axis('off')
-                print(connections)
+                # print(connections)
                 random.shuffle(connections)
                 connections.append('')
                 # Iterate seperately through all connections
-                print(connections)
+                # print(connections)
                 for line in connections:
                     if line == '':
                         restart = False
                         break
 
                     connect_gates = line.strip("\n").split(",")
-
+                    print(connect_gates)
                     # Connect two gates
                     path = self.move(connect_gates[0], connect_gates[1])
 
@@ -57,7 +61,7 @@ class Chip():
                         del connections[-1]
                         break
 
-                    print(path)
+                    # print(path)
                     # Draw the wires
                     for wires in range(len(path) - 1):
                         self.wires += 1
@@ -104,11 +108,13 @@ class Chip():
             self.height += 2 
 
 
+
     # load all the coordinate classes
     def load_coordinates(self, z):
         # fill the grid
         self.coordinates.append([[0 for x in range(self.width)] for y in range(self.height)])
-        
+        print(f"len: {len(self.coordinates)}")
+        print(self.depth)
         # iterate over all the grid coordinates
         # TODO draai de x en y waarde om, nu is verwarrend
         for y in range(self.height):
@@ -118,6 +124,7 @@ class Chip():
                 y1 = [y, y]
                 y2 = [y, y+1]
                 plt.plot(x1, y1, 'b', x2, y2, 'b')
+                # print(f"z: {z}")
 
                 coordinate = Coordinate(x, y, z)
 
@@ -189,7 +196,7 @@ class Chip():
         target_coords = [self.gates[target_gate]["x_coord"], self.gates[target_gate]["y_coord"], 0]
         
         (x, y, z) = target_coords
-        print(target_coords)
+        # print(target_coords)
         neighbours = [(x-1, y, z), (x, y-1, z), (x, y+1, z), (x+1, y, z), (x, y, z+1), (x, y, z-1)]
 
         for nodes in neighbours:
@@ -259,7 +266,7 @@ class Chip():
                     # print(next_door)
                     self.depth += 1
                     # print(self.depth)
-                    self.load_coordinates(next_door[2])
+                    self.load_coordinates(self.depth)
                     self.calculate_distance(target_coords)
 
                 # Check if the node is off the grid
@@ -315,11 +322,21 @@ class Chip():
         # print(f"target: {target_coords}")
         # print(f"target x: {target_coords[0]}")
         for z in self.coordinates:
+            # print(f"z: {z}")
             for y in z:
-                for x in y:
+                try:
+                    for x in y:
+                        x.distance_to_goal = abs(x.x_coord - target_coords[0])
+                        x.distance_to_goal += abs(x.y_coord - target_coords[1])
+                        x.distance_to_goal += abs(x.z_coord - target_coords[2])
+                except AttributeError:
+                    # print(z)
+                    # print(self.width)
+                    # print(self.height)
+                    # print(self.depth)
+                    # print(f"len: {test for test in self.coordinates}")
                     x.distance_to_goal = abs(x.x_coord - target_coords[0])
-                    x.distance_to_goal += abs(x.y_coord - target_coords[1])
-                    x.distance_to_goal += abs(x.z_coord - target_coords[2])
+                
                     # print(x.x_coord, x.y_coord, x.z_coord)
                     # print(x.distance_to_goal)
 
