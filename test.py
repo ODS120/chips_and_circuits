@@ -74,17 +74,20 @@ class Chip():
             # Skip first and last line of netlist file
             next(connections)
             connections = [connect.strip('\n') for connect in connections]
-            del connections[-1]
+            # del connections[-1]
 
             restart = True
 
             while restart:
+                print(1)
                 # Reset/initiate output file
                 with open('output.csv', 'w', newline='') as file:
                     output = csv.writer(file)
                     output.writerow(["net", "wires"])
 
                 # Reset variables
+                self.crossroad = []
+                self.travelled_path = []
                 self.coordinates = []
                 self.depth = 0
 
@@ -106,6 +109,10 @@ class Chip():
                 for connect in connections:
                     restart = self.connect_gates(connect, connections)
 
+                if restart:
+                    # Remove end of list signal
+                    del connections[-1]
+
 
     def load_coordinates(self, z):
         """
@@ -123,11 +130,12 @@ class Chip():
         for y in range(self.height):
             for x in range(self.width):
                 # Draw 2d representation TODO remove once finished
-                x1 = [x, x+1]
-                x2 = [x, x]
-                y1 = [y, y]
-                y2 = [y, y+1]
-                plt.plot(x1, y1, 'b', x2, y2, 'b')
+                if z == 0 :
+                    x1 = [x, x+1]
+                    x2 = [x, x]
+                    y1 = [y, y]
+                    y2 = [y, y+1]
+                    plt.plot(x1, y1, 'b', x2, y2, 'b')
 
                 coordinate = Coordinate(x, y, z)
 
@@ -183,16 +191,14 @@ class Chip():
             [type]: [description]
         """        
         if connect == '':
-            return False, connections
+            return False
 
         connect_gates = connect.strip("\n").split(",")
         path = self.move(connect_gates[0], connect_gates[1])
-
+        print(path)
         if path is None:
-            # Remove end of list signal
-            del connections[-1]
-
-            return True, connections
+            
+            return True
 
         # Draw the wires in 2d plot TODO remove when done
         for wires in range(len(path) - 1):
@@ -238,7 +244,10 @@ class Chip():
 
         Returns:
             [type]: [description]
-        """        
+        """      
+        self.crossroad = []
+        self.travelled_path = []
+
         # Source and target always on z-axis 0
         source_coords = [self.gates[source_gate]["x_coord"], self.gates[source_gate]["y_coord"], 0]
         target_coords = [self.gates[target_gate]["x_coord"], self.gates[target_gate]["y_coord"], 0]
@@ -263,6 +272,8 @@ class Chip():
         start_node = Node(source_coords, None, 0)
         goal_node = Node(target_coords, None, 0)
 
+        print(f"start: {start_node}")
+        print(f"goal: {goal_node}")
         self.crossroad.append(start_node)
 
         return self.run_algorithm(source_coords, target_coords, start_node, goal_node)
@@ -291,6 +302,8 @@ class Chip():
 
             # Check whether the the goal has been reached, return the path
             if current_node == goal_node:
+                # print(current_node)
+                print(2)
                 return self.retrace_path(current_node, start_node, goal_node, source_coords)
 
             (x, y, z) = current_node.position
@@ -299,7 +312,7 @@ class Chip():
 
             for next_door in neighbours:
                 self.check_directions(next_door, current_node, goal_node, target_coords)
-        
+
         return self.retrace_path(current_node, start_node, goal_node, source_coords)
 
 
@@ -323,18 +336,20 @@ class Chip():
             x = current_node.position[0]
             y = current_node.position[1]
             z = current_node.position[2]
+            print(current_node)
             parent_coords = current_node.parent.position
             
             # set wire between coordinates
             self.coordinates[z][y][x].connections[parent_coords[0], parent_coords[1], parent_coords[2]].used = True
             self.coordinates[parent_coords[2]][parent_coords[1]][parent_coords[0]].connections[x, y, z].used = True
+
             if current_node != goal_node and current_node != start_node:
                 self.coordinates[z][y][x].cost = 300
 
             path.append(current_node.position)
             current_node = current_node.parent
 
-        path.append(source_coords) 
+        path.append(source_coords)
 
         # Reverse the order of the path
         return path[::-1]
@@ -350,7 +365,7 @@ class Chip():
             goal_node ([type]): [description]
             target_coords ([type]): [description]
         """        
-        if next_door[2] < 0:
+        if next_door[2] < 0 or next_door[2] > 8:
             return
 
         if next_door[2] > self.depth:
@@ -373,15 +388,15 @@ class Chip():
         # Create a neighbor node
         neighbour = Node(next_door, current_node, next_node.cost + next_node.distance_to_goal)
 
-        if neighbour != goal_node and self.coordinates[next_door[2]][next_door[1]][next_door[0]].gate != None:
+        if neighbour != goal_node and self.coordinates[next_door[2]][next_door[1]][next_door[0]].gate is not None:
             return
 
         # Check if the neighbor is in the closed list
         if neighbour in self.travelled_path:
             return
-
+        
         # Check if neighbor is in open list and if it has a lower cost value
-        if(self.add_to_open(neighbour, goal_node) == True):
+        if(self.add_to_open(neighbour, goal_node)):
             self.crossroad.append(neighbour)
 
 
