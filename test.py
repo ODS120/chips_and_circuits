@@ -9,7 +9,7 @@ class Chip():
     def __init__(self, chip_data, netlist):
         self.height = 0
         self.width = 0
-        self.depth = 0
+        self.depth = 7
         self.coordinates = []
         self.gates = {}
         self.wires = 0
@@ -75,7 +75,7 @@ class Chip():
             # Skip first and last line of netlist file
             next(connections)
             connections = [connect.strip('\n') for connect in connections]
-            # del connections[-1]
+            del connections[-1]
 
             restart = True
 
@@ -91,7 +91,6 @@ class Chip():
                 self.crossroad = []
                 self.travelled_path = []
                 self.coordinates = []
-                self.depth = 0
 
                 # Reset/initiate internal representation
                 self.load_coordinates()
@@ -105,15 +104,15 @@ class Chip():
                 random.shuffle(connections)
 
                 # Check whether this order has been checked before
-                if connections in self.checked_order:
+                if "".join(connections) in self.checked_order:
                     continue
 
-                self.checked_order.append(connections)
+                self.checked_order.append("".join(connections))
 
                 # Add end of list signal
                 connections.append('')
 
-                print(connections)
+                
                 # Iterate through all connections
                 for connect in connections:
                     if self.connect_gates(connect):
@@ -259,8 +258,8 @@ class Chip():
         self.travelled_path = []
 
         # Source and target always on z-axis 0
-        source_coords = [self.gates[source_gate]["x_coord"], self.gates[source_gate]["y_coord"], 0]
-        target_coords = [self.gates[target_gate]["x_coord"], self.gates[target_gate]["y_coord"], 0]
+        source_coords = [self.gates[source_gate]["x_coord"], self.gates[source_gate]["y_coord"], 3]
+        target_coords = [self.gates[target_gate]["x_coord"], self.gates[target_gate]["y_coord"], 3]
         
         validity_check = [source_coords, target_coords]
 
