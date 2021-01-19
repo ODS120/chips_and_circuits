@@ -15,6 +15,7 @@ class Chip():
         self.wires = 0
         self.crossroad = [] #open
         self.travelled_path = [] #closed
+        self.checked_order = []
         
         # Prepare the chip to be worked with
         self.load_grid(chip_data)
@@ -79,7 +80,8 @@ class Chip():
             restart = True
 
             while restart:
-                print(1)
+                restart = False
+
                 # Reset/initiate output file
                 with open('output.csv', 'w', newline='') as file:
                     output = csv.writer(file)
@@ -92,7 +94,7 @@ class Chip():
                 self.depth = 0
 
                 # Reset/initiate internal representation
-                self.load_coordinates(0)
+                self.load_coordinates()
                 self.load_gates()
 
                 # Manage the visual reprentation of the grid
@@ -102,62 +104,69 @@ class Chip():
 
                 random.shuffle(connections)
 
+                # Check whether this order has been checked before
+                if connections in self.checked_order:
+                    continue
+
+                self.checked_order.append(connections)
+
                 # Add end of list signal
                 connections.append('')
 
+                print(connections)
                 # Iterate through all connections
                 for connect in connections:
-                    restart = self.connect_gates(connect, connections)
+                    if self.connect_gates(connect):
+                        # Remove end of list signal
+                        restart = True
+                        del connections[-1]
+                        break
 
-                if restart:
-                    # Remove end of list signal
-                    del connections[-1]
 
-
-    def load_coordinates(self, z):
+    def load_coordinates(self):
         """
         Initiate all the coordinate classes of a new layer and add their possible connections
 
         Args:
             z ([type]): [description]
         """
-        # Initiate a pre-filled grid
-        self.coordinates.append([[0 for x in range(self.width)] for y in range(self.height)])
-        # print(f"len: {len(self.coordinates)}")
-        # print(self.depth)
-        # iterate over all the grid coordinates
-        # Iterate through the grid
-        for y in range(self.height):
-            for x in range(self.width):
-                # Draw 2d representation TODO remove once finished
-                if z == 0 :
-                    x1 = [x, x+1]
-                    x2 = [x, x]
-                    y1 = [y, y]
-                    y2 = [y, y+1]
-                    plt.plot(x1, y1, 'b', x2, y2, 'b')
+        for z in range(8):
+            # Initiate a pre-filled grid
+            self.coordinates.append([[0 for x in range(self.width)] for y in range(self.height)])
 
-                coordinate = Coordinate(x, y, z)
+            # iterate over all the grid coordinates
+            # Iterate through the grid
+            for y in range(self.height):
+                for x in range(self.width):
+                    # Draw 2d representation TODO remove once finished
+                    if z == 0 :
+                        x1 = [x, x+1]
+                        x2 = [x, x]
+                        y1 = [y, y]
+                        y2 = [y, y+1]
+                        plt.plot(x1, y1, 'b', x2, y2, 'b')
 
-                # Add connections
-                if z > 0:
-                    coordinate.connections[x, y, z - 1] = Wire(x, y, z - 1)
-                    self.coordinates[z-1][y][x].connections[x, y, z] = Wire(x, y, z)
+                    coordinate = Coordinate(x, y, z)
 
-                if y >= 0 and y < self.height:
-                    coordinate.connections[x, y + 1, z] = Wire(x, y + 1, z)
+                    # Add connections
+                    if z > 0:
+                        coordinate.connections[x, y, z - 1] = Wire(x, y, z - 1)
+                        self.coordinates[z-1][y][x].connections[x, y, z] = Wire(x, y, z)
 
-                if y > 0 and y <= self.height:
-                    coordinate.connections[x, y - 1, z] = Wire(x, y - 1, z)
+                    if y >= 0 and y < self.height:
+                        coordinate.connections[x, y + 1, z] = Wire(x, y + 1, z)
 
-                if x >= 0 and x < self.width:
-                    coordinate.connections[x + 1, y, z] = Wire(x + 1, y, z)
+                    if y > 0 and y <= self.height:
+                        coordinate.connections[x, y - 1, z] = Wire(x, y - 1, z)
 
-                if x > 0 and x <= self.width:
-                    coordinate.connections[x - 1, y, z] = Wire(x - 1, y, z)
+                    if x >= 0 and x < self.width:
+                        coordinate.connections[x + 1, y, z] = Wire(x + 1, y, z)
 
-                # Replace coordinate with its respective class
-                self.coordinates[z][y][x] = coordinate
+                    if x > 0 and x <= self.width:
+                        coordinate.connections[x - 1, y, z] = Wire(x - 1, y, z)
+
+                    # Replace coordinate with its respective class
+                    self.coordinates[z][y][x] = coordinate
 
 
     # load all the gate classes
@@ -176,10 +185,10 @@ class Chip():
             plt.annotate(f"{gate_id}", (gate["x_coord"], gate["y_coord"]), fontsize = 13, ha = "center", va = "center")
 
             # appoint the gate its position on the grid
-            self.coordinates[0][gate["y_coord"]][gate["x_coord"]].gate = gate_object
+            self.coordinates[3][gate["y_coord"]][gate["x_coord"]].gate = gate_object
 
 
-    def connect_gates(self, connect, connections):
+    def connect_gates(self, connect):
         """
         Connect two gates according to the netlist and retrieve its path.
 
@@ -195,9 +204,8 @@ class Chip():
 
         connect_gates = connect.strip("\n").split(",")
         path = self.move(connect_gates[0], connect_gates[1])
-        print(path)
+
         if path is None:
-            
             return True
 
         # Draw the wires in 2d plot TODO remove when done
@@ -210,6 +218,8 @@ class Chip():
 
         # Visualize the solution TODO remove when done
         plt.savefig('test.png')
+
+        return False
 
 
     def wire(self, source, goal, colour): #direction
@@ -252,28 +262,29 @@ class Chip():
         source_coords = [self.gates[source_gate]["x_coord"], self.gates[source_gate]["y_coord"], 0]
         target_coords = [self.gates[target_gate]["x_coord"], self.gates[target_gate]["y_coord"], 0]
         
-        (x, y, z) = target_coords
-        neighbours = [(x-1, y, z), (x, y-1, z), (x, y+1, z), (x+1, y, z), (x, y, z+1), (x, y, z-1)]
+        validity_check = [source_coords, target_coords]
 
-        # Check validity of the directions
-        for nodes in neighbours:
-            if nodes[2] < 0:
-                return None
+        for gates in validity_check:
+            (x, y, z) = gates
+            neighbours = [(x-1, y, z), (x, y-1, z), (x, y+1, z), (x+1, y, z), (x, y, z+1), (x, y, z-1)]
 
-            # TODO Waar was deze ook al weer voor?
-            elif self.coordinates[nodes[2]][nodes[1]][nodes[0]].cost < 300:
-                break
-            
-            elif nodes == (x, y, z-1):
-                return None
+            # Check validity of the coordinates around the gates
+            for nodes in neighbours:
+                if nodes[2] < 0:
+                    return None
+
+                # TODO Waar was deze ook al weer voor?
+                elif self.coordinates[nodes[2]][nodes[1]][nodes[0]].cost < 300:
+                    break
+                
+                elif nodes == (x, y, z-1):
+                    return None
 
         self.calculate_distance(target_coords)
 
         start_node = Node(source_coords, None, 0)
         goal_node = Node(target_coords, None, 0)
 
-        print(f"start: {start_node}")
-        print(f"goal: {goal_node}")
         self.crossroad.append(start_node)
 
         return self.run_algorithm(source_coords, target_coords, start_node, goal_node)
@@ -302,16 +313,16 @@ class Chip():
 
             # Check whether the the goal has been reached, return the path
             if current_node == goal_node:
-                # print(current_node)
-                print(2)
+
                 return self.retrace_path(current_node, start_node, goal_node, source_coords)
 
             (x, y, z) = current_node.position
 
             neighbours = [(x-1, y, z), (x, y-1, z), (x, y+1, z), (x+1, y, z), (x, y, z+1), (x, y, z-1)]
+            self.calculate_distance(target_coords)
 
             for next_door in neighbours:
-                self.check_directions(next_door, current_node, goal_node, target_coords)
+                self.check_directions(next_door, current_node, goal_node)
 
         return self.retrace_path(current_node, start_node, goal_node, source_coords)
 
@@ -336,7 +347,6 @@ class Chip():
             x = current_node.position[0]
             y = current_node.position[1]
             z = current_node.position[2]
-            print(current_node)
             parent_coords = current_node.parent.position
             
             # set wire between coordinates
@@ -355,7 +365,7 @@ class Chip():
         return path[::-1]
 
 
-    def check_directions(self, next_door, current_node, goal_node, target_coords):
+    def check_directions(self, next_door, current_node, goal_node):
         """
         Check one of the nodes next to the current node.
 
@@ -365,13 +375,8 @@ class Chip():
             goal_node ([type]): [description]
             target_coords ([type]): [description]
         """        
-        if next_door[2] < 0 or next_door[2] > 8:
+        if next_door[2] < 0 or next_door[2] >= 8:
             return
-
-        if next_door[2] > self.depth:
-            self.depth += 1
-            self.load_coordinates(self.depth)
-            self.calculate_distance(target_coords)
 
         # Check if the node is off the grid
         if next_door[0] < 0 or next_door[0] > self.width - 1 or next_door[1] < 0 or next_door[1] > self.height - 1:
@@ -441,7 +446,7 @@ class Chip():
             [type]: [description]
         """        
         for node in self.crossroad:
-            if node.cost < neighbour.cost and node != goal_node:
+            if node.cost <= neighbour.cost and node != goal_node:
                 return False
         
         return True
