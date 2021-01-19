@@ -1,17 +1,12 @@
-"""TEST file
-No need to look inside this file.
-
-Returns:
-    [type]: [description]
 """
-
-
-import matplotlib.pyplot as plt
+classes.py
+"""
 import csv
 import random
-import copy
-
 import os
+import matplotlib.pyplot as plt
+
+import coordinate, gate, node, wire
 
 class Chip():
     def __init__(self, chip_data, netlist):
@@ -28,19 +23,7 @@ class Chip():
         # Prepare the chip to be worked with
         self.load_grid(chip_data)
         self.load_connections(netlist)
-   
-        # Filter id names
-        chip_id = os.path.basename(chip_data).replace("print_", "").replace(".csv",  "")
-        net_id = os.path.basename(netlist).replace("netlist_", "").replace(".csv", "")
 
-        with open('dimensions.csv', 'w') as file:
-            output = csv.writer(file)
-            output.writerow([self.width, self.height, self.depth])
-
-        # Add last line to the file
-        with open('output.csv', 'a', newline='') as file:
-            output = csv.writer(file)
-            output.writerow([f"chip_{chip_id}_net_{net_id}", self.wires])
 
 
     # load the grid
@@ -153,24 +136,24 @@ class Chip():
                         y2 = [y, y+1]
                         plt.plot(x1, y1, 'b', x2, y2, 'b')
 
-                    coordinate = Coordinate(x, y, z)
+                    coordinate = coordinate.Coordinate(x, y, z)
 
                     # Add connections
                     if z > 0:
-                        coordinate.connections[x, y, z - 1] = Wire(x, y, z - 1)
-                        self.coordinates[z-1][y][x].connections[x, y, z] = Wire(x, y, z)
+                        coordinate.connections[x, y, z - 1] = wire.Wire(x, y, z - 1)
+                        self.coordinates[z-1][y][x].connections[x, y, z] = wire.Wire(x, y, z)
 
                     if y >= 0 and y < self.height:
-                        coordinate.connections[x, y + 1, z] = Wire(x, y + 1, z)
+                        coordinate.connections[x, y + 1, z] = wire.Wire(x, y + 1, z)
 
                     if y > 0 and y <= self.height:
-                        coordinate.connections[x, y - 1, z] = Wire(x, y - 1, z)
+                        coordinate.connections[x, y - 1, z] = wire.Wire(x, y - 1, z)
 
                     if x >= 0 and x < self.width:
-                        coordinate.connections[x + 1, y, z] = Wire(x + 1, y, z)
+                        coordinate.connections[x + 1, y, z] = wire.Wire(x + 1, y, z)
 
                     if x > 0 and x <= self.width:
-                        coordinate.connections[x - 1, y, z] = Wire(x - 1, y, z)
+                        coordinate.connections[x - 1, y, z] = wire.Wire(x - 1, y, z)
 
                     # Replace coordinate with its respective class
                     self.coordinates[z][y][x] = coordinate
@@ -183,7 +166,7 @@ class Chip():
         """        
         for gate_id in self.gates:
             gate = self.gates[gate_id]
-            gate_object = Gate(gate_id, gate["x_coord"], gate["y_coord"])
+            gate_object = gate.Gate(gate_id, gate["x_coord"], gate["y_coord"])
 
             # plot the gate onto the chip TODO remove when done
             plt.plot(gate["x_coord"], gate["y_coord"], 'ro', marker = "s", markersize = 20)
@@ -289,8 +272,8 @@ class Chip():
 
         self.calculate_distance(target_coords)
 
-        start_node = Node(source_coords, None, 0)
-        goal_node = Node(target_coords, None, 0)
+        start_node = node.Node(source_coords, None, 0)
+        goal_node = node.Node(target_coords, None, 0)
 
         self.crossroad.append(start_node)
 
@@ -398,7 +381,7 @@ class Chip():
         next_node = self.coordinates[next_door[2]][next_door[1]][next_door[0]]
 
         # Create a neighbor node
-        neighbour = Node(next_door, current_node, next_node.cost + next_node.distance_to_goal)
+        neighbour = node.Node(next_door, current_node, next_node.cost + next_node.distance_to_goal)
 
         if neighbour != goal_node and self.coordinates[next_door[2]][next_door[1]][next_door[0]].gate is not None:
             return
@@ -457,58 +440,3 @@ class Chip():
                 return False
         
         return True
-
-
-class Node():
-    def __init__(self, position, parent, cost):
-        self.position = [position[0], position[1], position[2]]
-        self.parent = parent
-        self.cost = cost
-    
-    # Compare nodes
-    def __eq__(self, other):
-        return self.position == other.position
-
-    # Sort nodes
-    def __lt__(self, other):
-         return self.cost < other.cost
-
-        # Print node
-    def __repr__(self):
-        return ('({0},{1})'.format(self.position, self.cost))
-
-
-class Coordinate(): 
-    def __init__(self, x, y, z):
-        self.x_coord = x
-        self.y_coord = y
-        self.z_coord = z
-        self.gate = None
-        # north, east, south, west, up, down
-        self.connections = {}
-        self.cost = 1
-        self.distance_to_goal = 0 
-
-
-class Gate():
-    def __init__(self, gate_id, x, y):
-        self.gate_id = gate_id
-        self.x_coord = x
-        self.y_coord = y
-
-
-class Wire():
-    # stores wire found by algorithm 
-    def __init__(self, x, y, z):
-        # self.wire_id = wire_id
-        self.x = x
-        self.y = y
-        self.z = z
-        self.used = False
-        self.total_cost = 0
-
-    def add_wire(self, to_node, cost):
-        pass
-        # stores node objects
-        # self.nodes.append(to_node)
-        # self.total_cost += cost

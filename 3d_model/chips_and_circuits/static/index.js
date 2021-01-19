@@ -33,8 +33,8 @@ let layout = {
     scene: {
         aspectmode: "manual",
     // autosize: false,
-    // width: 1000,
-    // height: 700,
+        width: 1000,
+        height: 700,
         xaxis: {
             // autotick: false,
             // ticks: 'outside',
