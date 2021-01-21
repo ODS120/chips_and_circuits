@@ -33,9 +33,15 @@ let layout = {
     title: "Chips and Circuits",
     scene: {
         aspectmode: "manual",
+<<<<<<< HEAD
     autosize: false,
     width: 1000,
     height: 700,
+=======
+    // autosize: false,
+        width: 1000,
+        height: 700,
+>>>>>>> 12edc115a94a67f3d223bb1f1e99ac601e7ff27e
         xaxis: {
             // autotick: false,
             // ticks: 'outside',

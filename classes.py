@@ -1,3 +1,9 @@
+'''
+classes.py
+
+No need to check this file.
+'''
+
 import matplotlib.pyplot as plt
 import csv
 
