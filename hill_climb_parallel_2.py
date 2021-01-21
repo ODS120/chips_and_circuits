@@ -12,7 +12,7 @@ class Chip():
         self.gates = {}
 
         self.used_nodes = []
-        self.wire_paths = {}
+        self.wire_data = {}
 
         self.best_cost = float("inf")
         self.best_length = 0
@@ -43,7 +43,7 @@ class Chip():
         closed_wires = {}
         for wire in wires:
             connect_gates_id = wire.strip("\n").split(",")
-            self.wire_paths[wire_id] = {"a": connect_gates_id[0], "b": connect_gates_id[1], "source_node": self.gates[connect_gates_id[0]]['node_object'], "goal_node": self.gates[connect_gates_id[1]]['node_object'], "path": [self.gates[connect_gates_id[0]]['node_object']], "wire_cost": 0, "wire_length": 0}
+            self.wire_data[wire_id] = {"a": connect_gates_id[0], "b": connect_gates_id[1], "source_node": self.gates[connect_gates_id[0]]['node_object'], "goal_node": self.gates[connect_gates_id[1]]['node_object'], "path": [self.gates[connect_gates_id[0]]['node_object']], "wire_cost": 0, "wire_length": 0}
             # add source node to list with used nodes
             self.used_nodes.append(self.gates[connect_gates_id[0]]['node_object']) 
 
@@ -58,17 +58,17 @@ class Chip():
         while open_wires:
             for wire_id in open_wires:  
                 # add wire_id to source node
-                if wire_id not in self.wire_paths[wire_id]['source_node'].wires:
-                    self.wire_paths[wire_id]['source_node'].wires.append(wire_id)
+                if wire_id not in self.wire_data[wire_id]['source_node'].wires:
+                    self.wire_data[wire_id]['source_node'].wires.append(wire_id)
 
                 # calculate next step
-                current_location = self.path_search(self.wire_paths[wire_id]['path'][-1], self.wire_paths[wire_id]['goal_node'], wire_id)
+                current_location = self.path_search(self.wire_data[wire_id]['path'][-1], self.wire_data[wire_id]['goal_node'], wire_id)
 
                 # if wiring couldn't finish, remove wire id and add infinite wire cost
                 if current_location == None:
-                    self.wire_paths[wire_id]['wire_cost'] = float("inf")
+                    self.wire_data[wire_id]['wire_cost'] = float("inf")
                     open_wires.remove(wire_id) 
-                    closed_wires[wire_id] = self.wire_paths[wire_id]['wire_cost']
+                    closed_wires[wire_id] = self.wire_data[wire_id]['wire_cost']
                     break
                 
                 # add wire_id to node
@@ -76,12 +76,12 @@ class Chip():
                 # add node to list with used nodes
                 self.used_nodes.append(current_location) 
                 # add new node to wire's path 
-                self.wire_paths[wire_id]['path'].append(current_location)
+                self.wire_data[wire_id]['path'].append(current_location)
 
                 # check if location is wire's goal
-                if self.wire_paths[wire_id]['goal_node'] == current_location:
+                if self.wire_data[wire_id]['goal_node'] == current_location:
                     open_wires.remove(wire_id) 
-                    closed_wires[wire_id] = self.wire_paths[wire_id]['wire_cost']
+                    closed_wires[wire_id] = self.wire_data[wire_id]['wire_cost']
 
 
             # if no wires to draw, calculate total costs
@@ -90,8 +90,8 @@ class Chip():
                 total_cost = 0
                 total_length = 0
                 for wire_id in closed_wires:
-                    total_cost += self.wire_paths[wire_id]['wire_cost']
-                    total_length += self.wire_paths[wire_id]['wire_length']
+                    total_cost += self.wire_data[wire_id]['wire_cost']
+                    total_length += self.wire_data[wire_id]['wire_length']
 
                 # if netlist improved, store paths of wires
                 if total_cost < self.best_cost:
@@ -102,9 +102,9 @@ class Chip():
                     paths_data = []
                     for wire_id in closed_wires:
                         path_coordinates = []
-                        for node in self.wire_paths[wire_id]['path']:
+                        for node in self.wire_data[wire_id]['path']:
                             path_coordinates.append([node.x_coord, node.y_coord, node.z_coord])
-                        paths_data.append([self.wire_paths[wire_id]['a'], self.wire_paths[wire_id]['b'], path_coordinates])
+                        paths_data.append([self.wire_data[wire_id]['a'], self.wire_data[wire_id]['b'], path_coordinates])
 
                 # remove wires, add wire_id to open_list and clean coordinates
                 if iteration != nr_wires:
@@ -131,14 +131,14 @@ class Chip():
                         open_wires.append(wire[0])
 
                         # reset wire cost and length
-                        self.wire_paths[wire[0]]['wire_cost'] = 0
-                        self.wire_paths[wire[0]]['wire_length'] = 0
+                        self.wire_data[wire[0]]['wire_cost'] = 0
+                        self.wire_data[wire[0]]['wire_length'] = 0
 
                         # remove wire from closed wires
                         del closed_wires[wire[0]]
 
                         # iterate over nodes of wire path
-                        for node in self.wire_paths[wire[0]]['path']:
+                        for node in self.wire_data[wire[0]]['path']:
 
                             # remove wire_id from coordinate
                             if wire[0] in node.wires:
@@ -201,8 +201,8 @@ class Chip():
                 neighbour.parent = current_node
 
                 # add wire length
-                self.wire_paths[wire_id]['wire_length'] += 1
-                self.wire_paths[wire_id]['wire_cost'] += 1
+                self.wire_data[wire_id]['wire_length'] += 1
+                self.wire_data[wire_id]['wire_cost'] += 1
                 
                 neighbour.cost = 300
                 current_node.cost = 300
@@ -234,12 +234,12 @@ class Chip():
               
         # add cost
         if best_option.cost == 300:
-            self.wire_paths[wire_id]['wire_cost'] += 300
+            self.wire_data[wire_id]['wire_cost'] += 300
         else: 
-            self.wire_paths[wire_id]['wire_cost'] += 1
+            self.wire_data[wire_id]['wire_cost'] += 1
 
         # add wire length
-        self.wire_paths[wire_id]['wire_length'] += 1
+        self.wire_data[wire_id]['wire_length'] += 1
 
         # change nodes cost
         best_option.cost = 300
