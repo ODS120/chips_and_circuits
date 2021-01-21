@@ -1,7 +1,8 @@
 
 
 from sys import argv
-from test import Chip#, Coordinate, Gate
+# from hill_climber import Chip
+from hill_climb_parallel import Chip
 
 if __name__ == "__main__":
     # check command line arguments

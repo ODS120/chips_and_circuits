@@ -10,7 +10,7 @@ class Chip():
         self.coordinates = []
         self.gates = {}
         self.wires = 0
-        self.wiring_coords = []
+        self.wiring_coords = [] ##
 
         with open('output.csv', 'w', newline='') as file:
             output = csv.writer(file)

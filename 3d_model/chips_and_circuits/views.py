@@ -89,16 +89,3 @@ def upload_csv(request):
         return render(request, "chips_and_circuits/index.html", { "message": "ELSE ERROR" })
 
 
-                        # [
-                #     [0,0,0,1,2], # x
-                #     [0,0,0,0,0], # y
-                #     [0,1,2,2,2], # z
-                #     'lines' # mode
-                # ],
-                # [
-                #     [1],
-                #     [6],
-                #     [6],
-                #     'markers' # mode
-                # ],
-            # ]
