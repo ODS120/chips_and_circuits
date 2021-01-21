@@ -23,8 +23,7 @@ for (i = 0; i < lines_xyz.length; i++) {
         color: "#ff0000",
     },
     mode: lines_xyz[i][3],
-    type: "scatter3d",
-    labels: ['TEST']
+    type: "scatter3d"
     };
 }
 console.log(parseInt(dimensions[0]))
@@ -33,15 +32,9 @@ let layout = {
     title: "Chips and Circuits",
     scene: {
         aspectmode: "manual",
-<<<<<<< HEAD
-    autosize: false,
-    width: 1000,
-    height: 700,
-=======
     // autosize: false,
         width: 1000,
         height: 700,
->>>>>>> 12edc115a94a67f3d223bb1f1e99ac601e7ff27e
         xaxis: {
             // autotick: false,
             // ticks: 'outside',
