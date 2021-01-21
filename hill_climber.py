@@ -42,7 +42,7 @@ class Chip():
         counter = 1
         paths_best_iteration = []
         iterations = 500
-        
+
         for x in range(iterations):
             # reset all used coordinates and data
             self.total_cost = 0
@@ -273,6 +273,7 @@ class Coordinate():
         self.near_gate_cost = 0
         self.distance_to_goal = None
         self.flat_distance_to_goal = None
+        self.vert_distance_to_goal = None
         self.heuristic = None
 
         self.parent = None

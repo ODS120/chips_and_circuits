@@ -2,7 +2,7 @@
 
 from sys import argv
 # from hill_climber import Chip
-from hill_climb_parallel import Chip
+from hill_climb_parallel_2 import Chip
 
 if __name__ == "__main__":
     # check command line arguments
