@@ -16,15 +16,16 @@ def upload_csv(request):
         
         netlist_data = netlist_file.read().decode("utf-8")   
         # print(netlist_data)
-        netlist_data = netlist_data.replace('[[', '')
-        netlist_data = netlist_data.replace(']]"', '')
+        netlist_data = netlist_data.replace('"(', '')
+        # netlist_data = netlist_data.replace('"[(', '')
+        netlist_data = netlist_data.replace(')]"', '')
         netlist_data = netlist_data.split('\r\n')
         # netlist_data = netlist_data.split('","')
 
         # print(netlist_data)
         for i in range(1, len(netlist_data) - 2):
-            connect_data = netlist_data[i].split('","')
-            coords_data = connect_data[1].split('], [')
+            connect_data = netlist_data[i].split('","[(')
+            coords_data = connect_data[1].split('), (')
             x = []
             y = []
             z = []
@@ -67,7 +68,7 @@ def upload_csv(request):
                 gate_coordinate = [ 
                     [ gate_data[1] ],
                     [ gate_data[2] ],
-                    ["3"],
+                    ["0"],
                     'markers']
                 graph_data.append(gate_coordinate)
     
