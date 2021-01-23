@@ -67,7 +67,7 @@ def upload_csv(request):
                 gate_coordinate = [ 
                     [ gate_data[1] ],
                     [ gate_data[2] ],
-                    ["3"],
+                    ["0"],
                     'markers']
                 graph_data.append(gate_coordinate)
     
