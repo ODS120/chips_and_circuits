@@ -1,8 +1,9 @@
 class Node():
-    def __init__(self, position, parent, cost):
-        self.position = [position[0], position[1], position[2]]
+    def __init__(self, position, parent, cost, heuristic):
+        self.position = position[0], position[1], position[2]
         self.parent = parent
         self.cost = cost
+        self.heuristic = heuristic
     
     # Compare nodes
     def __eq__(self, other):
@@ -10,8 +11,8 @@ class Node():
 
     # Sort nodes
     def __lt__(self, other):
-         return self.cost < other.cost
+         return self.heuristic < other.heuristic
 
         # Print node
     def __repr__(self):
-        return ('({0},{1})'.format(self.position, self.cost))
+        return ('({0},{1})'.format(self.position, self.heuristic))
