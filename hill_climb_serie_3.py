@@ -2,7 +2,6 @@ import csv
 import random
 import os
 
-
 class Chip():
     def __init__(self, chip_data, netlist):
         self.height = 0
@@ -42,6 +41,7 @@ class Chip():
         closed_wires = {}
         for wire in wires:
             connect_gates_id = wire.strip("\n").split(",")
+            # self.wire_data[wire_id] = {"a": connect_gates_id[0], "b": connect_gates_id[1], "source_node": self.gates[connect_gates_id[0]]['node_object'], "goal_node": self.gates[connect_gates_id[1]]['node_object'], "path": [self.gates[connect_gates_id[0]]['node_object']], "wire_cost": 0, "wire_length": 0}
             self.wire_data[wire_id] = {"a": connect_gates_id[0], "b": connect_gates_id[1], "source_node": self.gates[connect_gates_id[0]]['node_object'], "goal_node": self.gates[connect_gates_id[1]]['node_object'], "path": [self.gates[connect_gates_id[0]]['node_object']], "wire_cost": 0, "wire_length": 0}
             # add source node to list with used nodes
             self.used_nodes.append(self.gates[connect_gates_id[0]]['node_object']) 
@@ -53,36 +53,30 @@ class Chip():
         iteration = 0
         paths_data = []
         total_iterations = 0
+
+        tries = 5000
         # loop over wires and draw
         while open_wires:
-            for wire_id in open_wires:  
-                # add wire_id to source node
+            for wire_id in open_wires:
+                # add wire_id to source node wires
                 if wire_id not in self.wire_data[wire_id]['source_node'].wires:
                     self.wire_data[wire_id]['source_node'].wires.append(wire_id)
 
-                # calculate next step
-                current_location = self.path_search(self.wire_data[wire_id]['path'][-1], self.wire_data[wire_id]['goal_node'], wire_id)
+                # calculate path
+                wire_path = self.path_search(self.wire_data[wire_id]['path'][-1], self.wire_data[wire_id]['goal_node'], wire_id)
 
-                # if wiring couldn't finish, remove wire id and add infinite wire cost
-                if current_location == None:
-                    self.wire_data[wire_id]['wire_cost'] = float("inf")
+                # if wiring couldn't finish,
+                if wire_path == False:
                     open_wires.remove(wire_id) 
                     closed_wires[wire_id] = self.wire_data[wire_id]['wire_cost']
+                    # print("ERROR")
                     break
                 
-                # add wire_id to node
-                current_location.wires.append(wire_id)
-                # add node to list with used nodes
-                self.used_nodes.append(current_location) 
-                # add new node to wire's path 
-                self.wire_data[wire_id]['path'].append(current_location)
+                # remove wire from open_wires
+                open_wires.remove(wire_id) 
+                closed_wires[wire_id] = self.wire_data[wire_id]['wire_cost']
 
-                # check if location is wire's goal
-                if self.wire_data[wire_id]['goal_node'] == current_location:
-                    open_wires.remove(wire_id) 
-                    closed_wires[wire_id] = self.wire_data[wire_id]['wire_cost']
-
-
+            
             # if no wires to draw, calculate total costs
             if len(open_wires) == 0:
                 # calculate total cost and length
@@ -94,23 +88,25 @@ class Chip():
 
                 # if netlist improved, store paths of wires
                 if total_cost < self.best_cost:
-                    print("IMRPOVED")
                     self.best_cost = total_cost
                     self.best_length = total_length
-                    print(f"Total cost: {self.best_cost}  Total length: {self.best_length}")
+                    print(f"IMRPOVED Total cost: {self.best_cost}  Total length: {self.best_length}  Try: {total_iterations}")
+
                     paths_data = []
+                    # save best path in right format
                     for wire_id in closed_wires:
                         path_coordinates = []
                         for node in self.wire_data[wire_id]['path']:
                             path_coordinates.append([node.x_coord, node.y_coord, node.z_coord])
                         paths_data.append([self.wire_data[wire_id]['a'], self.wire_data[wire_id]['b'], path_coordinates])
 
-                # remove wires, add wire_id to open_list and clean coordinates
-                if iteration != nr_wires:
+
+                # remove wires, add wire_id to open_wires and clean coordinates
+                if iteration != nr_wires or total_iterations < tries:
                     total_iterations += 1
                     iteration += 1
 
-                    if total_iterations % 50 == 0:
+                    if total_iterations % (tries/10) == 0:
                         print(f"Try: {total_iterations}")
                         
                     # sort wires on cost 
@@ -118,21 +114,21 @@ class Chip():
                     
                     # get wires to redraw
                     remove_wires = sorted_wires[iteration:]
-              
-                    # if no solution found, restart with new start wire order
-                    if iteration == nr_wires and total_iterations < 1000:
+                
+                    # if no wires to be removed, retry with new start wire order 
+                    if iteration == nr_wires and total_iterations < tries:
                         iteration = 0
                         remove_wires = list(closed_wires.items()) 
 
                     # iterate over wires and remove
                     for wire in remove_wires:
+                        # print(f"remove_wires {remove_wires}")
                         # add wire_id to open wires
                         open_wires.append(wire[0])
                         
                         # reset wire cost and length
                         self.wire_data[wire[0]]['wire_cost'] = 0
                         self.wire_data[wire[0]]['wire_length'] = 0
-
                         # remove wire from closed wires
                         del closed_wires[wire[0]]
 
@@ -151,14 +147,19 @@ class Chip():
                             # if node intersection is free, change node costs
                             if len(node.wires) == 0:
                                 node.cost = 1
+                        self.wire_data[wire[0]]['path'] = [self.wire_data[wire[0]]['source_node']]
         
                     # shuffle order of wires to redraw
+                    # print(len(open_wires))
                     random.shuffle(open_wires)
+                    # for id in open_wires:
+                    #     print(f"ID:{id} {self.wire_data[id]}")
                     # swap start and end of wire
-                    for wire_id in open_wires[:int(len(open_wires)/2)]:
+                    for wire_id in open_wires:
                         temp = self.wire_data[wire_id]['source_node']
                         self.wire_data[wire_id]['source_node'] = self.wire_data[wire_id]['goal_node']
                         self.wire_data[wire_id]['goal_node'] = temp   
+                        self.wire_data[wire_id]['path'] = [self.wire_data[wire_id]['source_node']]
                 
         print("FINISH")
         # save results
@@ -181,75 +182,108 @@ class Chip():
             output.writerow([f"chip_{chip_id}_net_{net_id}", self.best_cost])
 
                 
-    def path_search (self, current_node, goal_node, wire_id):
-        options = []
+    def path_search (self, source_node, goal_node, wire_id):
+        current_node = source_node
+        self.used_nodes.append(source_node)
+        # print("____________")
+        while current_node != goal_node:
+            # change cost of current node
+            current_node.cost = 301
+            options = []
+            # print(f"Current neighbours: {current_node.neighbours}")
+            # print(' ')
+            for neighbour in current_node.neighbours:                
+                if neighbour == goal_node:
+                    # close chosen path for other wires
+                    current_node.closed_neighbours.append(neighbour)
+                    neighbour.closed_neighbours.append(current_node)
+                    # store parent of chosen node
+                    neighbour.parent = current_node
 
-        for neighbour in current_node.neighbours: 
-            # pick best neigbour
-            if neighbour in current_node.closed_neighbours:
-                continue
-            if neighbour.gate and neighbour != goal_node:
-                continue
+                    # add wire_id to node 
+                    neighbour.wires.append(wire_id)
 
-            if neighbour == goal_node:
-                self.used_nodes.append(goal_node)
+                    # add node to path
+                    self.wire_data[wire_id]['path'].append(neighbour)
+                    
+                    # add node to list with used nodes
+                    self.used_nodes.append(neighbour)
 
-                # close chosen path for other wires
-                current_node.closed_neighbours.append(neighbour)
-                neighbour.closed_neighbours.append(current_node)
-
-                # store parent of chosen node
-                neighbour.parent = current_node
-
-                # add wire length
-                self.wire_data[wire_id]['wire_length'] += 1
-                self.wire_data[wire_id]['wire_cost'] += 1
+                    # add cost
+                    self.wire_data[wire_id]['wire_cost'] += 1
                 
-                neighbour.cost = 300
-                current_node.cost = 300
-                return neighbour
+                    # add wire length
+                    self.wire_data[wire_id]['wire_length'] += 1
+                    return True
+
+                # store parent
+                if neighbour in current_node.closed_neighbours:
+                    continue
+                if neighbour.gate and neighbour != goal_node:
+                    continue
+
+
+                neighbour.distance_to_goal = self.calculate_distance_to_goal(neighbour, goal_node)
+                neighbour.flat_distance_to_goal = self.calculate_flat_distance_to_goal(neighbour, goal_node)
+                # neighbour.heuristic = neighbour.distance_to_goal + neighbour.cost + neighbour.near_gate_cost
+                neighbour.heuristic = neighbour.distance_to_goal + neighbour.cost + neighbour.near_gate_cost
+
+                options.append(neighbour)      
+
+            if len(options) == 0:
+                self.wire_data[wire_id]['wire_cost'] = float("inf")
+                return False              
+
+            # sort options on distance to goal
+            # options.sort(key=lambda x: (x.distance_to_goal, x.cost, x.flat_distance_to_goal))
+            # options.sort(key=lambda x: (x.heuristic, x.distance_to_goal, x.flat_distance_to_goal))
+            options.sort(key=lambda x: (x.heuristic))
+
+            # get lowest cost node
+            lowest_cost_node = options[0]
+            # best_option = options.pop(0)
+ 
+            # get comparable options
+            comparable_options = []
+            for option in options:
+                if option.heuristic == lowest_cost_node.heuristic:
+                    comparable_options.append(option)
+            # print(comparable_options)
+            best_option = random.choice(comparable_options)
             
-            neighbour.distance_to_goal = self.calculate_distance_to_goal(neighbour, goal_node)
-            neighbour.flat_distance_to_goal = self.calculate_flat_distance_to_goal(neighbour, goal_node)
-            neighbour.vertic_distance_to_goal = self.calculate_flat_distance_to_goal(neighbour, goal_node)
+
+
+
+            # close chosen path for other wires
+            current_node.closed_neighbours.append(best_option)
+            best_option.closed_neighbours.append(current_node)
             
-            neighbour.heuristic = neighbour.cost + neighbour.distance_to_goal + neighbour.near_gate_cost
-            # neighbour.heuristic = neighbour.cost + neighbour.distance_to_goal
-            options.append(neighbour)      
 
-        if len(options) == 0:
-            return None   
+            # store parent of chosen node
+            best_option.parent = current_node
 
-        # sort options on distance to goal
-        options.sort(key=lambda x: (x.heuristic))
-        options = options[:2]
-        # shuffle order of wires to redraw
-        # random.shuffle(options)
-
-        # get best option
-        best_option = options.pop(0)
+            # add wire_id to node 
+            best_option.wires.append(wire_id)
         
-        # close chosen path for other wires
-        current_node.closed_neighbours.append(best_option)
-        best_option.closed_neighbours.append(current_node)
+            # add node to path
+            self.wire_data[wire_id]['path'].append(best_option)
+            
+            # add node to list with used nodes
+            self.used_nodes.append(best_option)
 
-        # store parent of chosen node
-        best_option.parent = current_node
-              
-        # add cost
-        if best_option.cost == 300:
-            self.wire_data[wire_id]['wire_cost'] += 300
-        else: 
-            self.wire_data[wire_id]['wire_cost'] += 1
-
-        # add wire length
-        self.wire_data[wire_id]['wire_length'] += 1
-
-        # change nodes cost
-        best_option.cost = 300
-        current_node.cost = 300
-
-        return best_option
+            # add cost
+            self.wire_data[wire_id]['wire_cost'] += best_option.cost
+           
+            # add wire length
+            self.wire_data[wire_id]['wire_length'] += 1
+            
+            # return path if goal found
+            if best_option == goal_node:
+                return True
+            
+            current_node = best_option
+        # print("3333")
+        return None
 
 
 
