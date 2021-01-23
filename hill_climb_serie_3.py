@@ -52,9 +52,9 @@ class Chip():
         nr_wires = len(open_wires)
         iteration = 0
         paths_data = []
-        total_iterations = 0
+        total_resets = 0
 
-        tries = 5000
+        tries = 5
         # loop over wires and draw
         while open_wires:
             for wire_id in open_wires:
@@ -69,7 +69,7 @@ class Chip():
                 if wire_path == False:
                     open_wires.remove(wire_id) 
                     closed_wires[wire_id] = self.wire_data[wire_id]['wire_cost']
-                    # print("ERROR")
+                    open_wires == 0
                     break
                 
                 # remove wire from open_wires
@@ -90,36 +90,55 @@ class Chip():
                 if total_cost < self.best_cost:
                     self.best_cost = total_cost
                     self.best_length = total_length
-                    print(f"IMRPOVED Total cost: {self.best_cost}  Total length: {self.best_length}  Try: {total_iterations}")
+                    print(f"IMRPOVED Total cost: {self.best_cost}  Total length: {self.best_length}  Iteration: {iteration}  Resets: {total_resets}")
 
                     paths_data = []
                     # save best path in right format
                     for wire_id in closed_wires:
                         path_coordinates = []
                         for node in self.wire_data[wire_id]['path']:
-                            path_coordinates.append([node.x_coord, node.y_coord, node.z_coord])
+                            path_coordinates.append((node.x_coord, node.y_coord, node.z_coord))
                         paths_data.append([self.wire_data[wire_id]['a'], self.wire_data[wire_id]['b'], path_coordinates])
 
 
                 # remove wires, add wire_id to open_wires and clean coordinates
-                if iteration != nr_wires or total_iterations < tries:
-                    total_iterations += 1
+                if total_resets < tries:
                     iteration += 1
 
-                    if total_iterations % (tries/10) == 0:
-                        print(f"Try: {total_iterations}")
-                        
                     # sort wires on cost 
                     sorted_wires = sorted(closed_wires.items(), key=lambda x: x[1])
                     
                     # get wires to redraw
                     remove_wires = sorted_wires[iteration:]
-                
-                    # if no wires to be removed, retry with new start wire order 
-                    if iteration == nr_wires and total_iterations < tries:
+
+                    # print(f"iteration {iteration}")
+                    # print(f"total_resets {total_resets}")
+                    # print(f"nr_wires {nr_wires}")
+                    # print(f"tries {tries}")
+                    # print(" ")
+
+                    # if all wires are infinite, start with different order
+                    if sorted_wires[0][1] == float("inf") or (iteration == nr_wires and total_resets < tries):
+                        total_resets += 1
                         iteration = 0
                         remove_wires = list(closed_wires.items()) 
+                        if total_resets % (tries/30) == 0:
+                            print(f"Try: {total_resets}")
 
+                        print(f"Resets: {total_resets}")
+                        print("_____")
+
+               
+                    # if iteration == nr_wires and total_resets < tries:
+                    #     total_resets += 1
+                    #     iteration = 0
+                    #     remove_wires = list(closed_wires.items()) 
+                    #     if total_resets % (tries/30) == 0:
+                    #         print(f"Try: {total_resets}")
+                    #     print("_____")
+                    #     # print(f"Try: {total_resets}  {sorted_wires[0][1]}")
+                        
+                                        
                     # iterate over wires and remove
                     for wire in remove_wires:
                         # print(f"remove_wires {remove_wires}")
@@ -132,9 +151,10 @@ class Chip():
                         # remove wire from closed wires
                         del closed_wires[wire[0]]
 
+                        # print(f"WirePath {self.wire_data[wire[0]]['path']}")
+                        # print(" ")
                         # iterate over nodes of wire path
                         for node in self.wire_data[wire[0]]['path']:
-
                             # remove wire_id from coordinate
                             if wire[0] in node.wires:
                                 node.wires.remove(wire[0])
@@ -148,10 +168,9 @@ class Chip():
                             if len(node.wires) == 0:
                                 node.cost = 1
                         self.wire_data[wire[0]]['path'] = [self.wire_data[wire[0]]['source_node']]
-        
-                    # shuffle order of wires to redraw
-                    # print(len(open_wires))
+
                     random.shuffle(open_wires)
+                    print(len(open_wires))
                     # for id in open_wires:
                     #     print(f"ID:{id} {self.wire_data[id]}")
                     # swap start and end of wire
@@ -252,8 +271,6 @@ class Chip():
             best_option = random.choice(comparable_options)
             
 
-
-
             # close chosen path for other wires
             current_node.closed_neighbours.append(best_option)
             best_option.closed_neighbours.append(current_node)
@@ -282,7 +299,6 @@ class Chip():
                 return True
             
             current_node = best_option
-        # print("3333")
         return None
 
 
@@ -297,7 +313,6 @@ class Chip():
     def calculate_vertic_distance_to_goal(self, current_node, goal_node):
         distance = abs(current_node.y_coord - goal_node.y_coord)
         return distance
-
 
 
     # load the grid
