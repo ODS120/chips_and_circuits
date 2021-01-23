@@ -1,0 +1,46 @@
+<diagram program="umletino" version="14.4.0-SNAPSHOT"><zoom_level>10</zoom_level><help_text>Space for diagram notes</help_text><element><id>UMLClass</id><coordinates><x>430</x><y>161</y><w>210</w><h>140</h></coordinates><panel_attributes>Node
+--
++ position: [int, int]
++ parent: Node
++ cost: int
+
+--
++ __eq__(self, gate_id, x, y)
++ __lt__(self, other)
+
+
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>60</x><y>21</y><w>280</w><h>280</h></coordinates><panel_attributes>Chip
+--
++ height: int
++ width: int
++ depth: int
++ coordinates: list (depth, height, width)
++ gates: {gate_id: z_coord,  y_coord, x_coord} 
++ wires: int
+
+--
+Responsibilities
++ load_grid(self, chip_data)
++ load_coordinates(self)
++ load_gates(self)
++ wire(self, source, goal, colour)
++ save_csv(self, net, wires)
++ move(self, source_gate, target_gate)
++ add_to_open(self, crossroad, neighbour)</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>60</x><y>331</y><w>280</w><h>140</h></coordinates><panel_attributes>Coordinate
+--
++ x_coord: x
++ y_coord: y
++ z_coord: z
++ gate: Gate
++ connections: {x_coord, y_coord, z_coord: Wire}
++ cost: int</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>430</x><y>331</y><w>210</w><h>90</h></coordinates><panel_attributes>Gate
+--
++ gate_id: int
++ x_coord: int
++ y_coord: int</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>430</x><y>451</y><w>210</w><h>110</h></coordinates><panel_attributes>Wire
+--
++ x: int
++ y: int
++ z: int
++ used: bool
++ total_cost: int</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>330</x><y>411</y><w>120</w><h>70</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>10;10;100;50</additional_attributes></element><element><id>Relation</id><coordinates><x>330</x><y>331</y><w>120</w><h>90</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>10;70;100;10</additional_attributes></element></diagram>
