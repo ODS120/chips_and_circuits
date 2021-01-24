@@ -6,5 +6,6 @@ class Coordinate():
         self.gate = None
         # north, east, south, west, up, down
         self.connections = {}
+        self.used = False
         self.cost = 1
         self.distance_to_goal = 0 
