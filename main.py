@@ -2,7 +2,7 @@
 
 from sys import argv
 # from hill_climber import Chip
-from hill_climb_parallel_2 import Chip
+from hill_climb_serie_3 import Chip
 from algorithms import astar
 
 if __name__ == "__main__":
