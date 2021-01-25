@@ -111,28 +111,27 @@ class Chip():
                         total_resets += 1
                         iteration = 0
                         remove_wires = list(closed_wires.items()) 
-
                       
-                        if total_resets % (total_resets/100) == 0:
+                        if (total_resets % (total_resets/100)) == 0:
                             print(f"Resets: {total_resets}")
                             print("_____")
                                         
                     # iterate over wires and reset paths and data
                     for wire in remove_wires:
-                        # add wire_id to open wires
-                        open_wires.append(wire[0])
-                        
+                        wire_id = wire[0]
+                        # add wire_id to open wires and  remove wire from closed wires
+                        open_wires.append(wire_id)
+                        del closed_wires[wire_id]
+
                         # reset wire cost and length
-                        self.wire_data[wire[0]]['wire_cost'] = 0
-                        self.wire_data[wire[0]]['wire_length'] = 0
-                        # remove wire from closed wires
-                        del closed_wires[wire[0]]
+                        self.wire_data[wire_id]['wire_cost'] = 0
+                        self.wire_data[wire_id]['wire_length'] = 0                       
 
                         # iterate over nodes of wire path
-                        for node in self.wire_data[wire[0]]['path']:
+                        for node in self.wire_data[wire_id]['path']:
                             # remove wire_id from coordinate
-                            if wire[0] in node.wire_ids:
-                                node.wire_ids.remove(wire[0])
+                            if wire_id in node.wire_ids:
+                                node.wire_ids.remove(wire_id)
 
                             # open path
                             if node.parent:
@@ -144,7 +143,7 @@ class Chip():
                             # if node intersection is free, change node costs
                             if len(node.wire_ids) == 0:
                                 node.cost = 1
-                        self.wire_data[wire[0]]['path'] = [self.wire_data[wire[0]]['source_node']]
+                        self.wire_data[wire_id]['path'] = [self.wire_data[wire_id]['source_node']]
 
                     random.shuffle(open_wires)
                     # swap start and end of wire
