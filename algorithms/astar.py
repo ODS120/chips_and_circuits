@@ -29,7 +29,10 @@ def main(chip_data, netlist):
     net_id = os.path.basename(netlist).replace("netlist_", "").replace(".csv", "")
 
     chip = cp.Chip(chip_data, netlist)
+    # chip = load_coordinates(chip)
+    # chip = load_gates(chip)
     load_connections(netlist, chip, chip_id, net_id)
+
 
     with open('dimensions.csv', 'w') as file:
         output = csv.writer(file)
@@ -44,99 +47,170 @@ def load_connections(netlist, chip, chip_id, net_id):
     Args:
         netlist ([type]): [description]
     """
-    load_coordinates(chip)
-    load_gates(chip)
+    connections = []
 
     with open(netlist) as connections:
         # Skip first and last line of netlist file
         next(connections)
-
         connections = [connect.strip('\n') for connect in connections]
-        # checked_order = []
-        min_cost = 0
 
-        # TODO check inbouwen voor compleetheid verbindingen
-        # Iterate 10 times
-        for i in range(4):
-            if i == 1 or i == 3:
-                connections = connections[::-1]
+    save_connections = copy.deepcopy(connections)
+    # checked_order = []
+    min_cost = 0
+    malfunction = []
+    reshuffle = False
+    order = 0
+    checked_order = []
+    attempt = 0
 
-            if i == 2:
-                length_order = {}
+    # TODO check inbouwen voor compleetheid verbindingen
+    # Iterate 10 times
+    while order in range(4):
+        if reshuffle:
+            order -= 1
+            print(attempt)
+            connections, attempt = reshuffle_connections(attempt, connections, malfunction)
+            reshuffle = False
+        else:
+            connections, order, attempt = alter_connection_order(save_connections, order, attempt, chip)
+        
+        order += 1
+        print(order)
+        
 
-                for connect in connections:
-                    order = connect.strip("\n").split(",")
-                    source_coords = [chip.gates[order[0]]["x"], chip.gates[order[0]]["y"], 0]
-                    target_coords = [chip.gates[order[1]]["x"], chip.gates[order[1]]["y"], 0]
+        # Reset/initiate variables
+        total_path = []
+        connected_gates = []
+        chip.coordinates = []
+        chip.cost = 0
+        chip.collisions = 0
 
-                    gate_dif = abs(source_coords[0] - target_coords[0]) + abs(source_coords[1] - target_coords[1])
+        # Reset/initiate internal representation
+        chip = load_coordinates(chip)
+        chip = load_gates(chip)
 
-                    while gate_dif in length_order:
-                        gate_dif += .1
+        # Manage the visual reprentation of the grid
+        plt.xlim([0, chip.width - 1])
+        plt.ylim([0, chip.height - 1])
+        # plt.axis('off')
 
-                    length_order[gate_dif] = connect
-                
-                test = sorted(length_order)
-                connections = [length_order[key] for key in test]
+        # random.shuffle(connections)
 
-            print(i)
+        # # Check whether this order has been checked before
+        if "".join(connections) in checked_order:
+            continue
+        
+        checked_order.append("".join(connections))
 
-            # Reset/initiate variables
-            total_path = []
-            connected_gates = []
-            chip.coordinates = []
-            chip.cost = 0
+        # Add end-of-list signal
+        connections.append('')
+        finished = True
+        print(connections)
 
-            # Reset/initiate internal representation
-            load_coordinates(chip)
-            load_gates(chip)
+        for connect in connections:
+            print(connect)
+            # Stop when cost are higher than the cheapest iteration
+            if chip.cost >= min_cost and min_cost != 0:
+                break
+            
+            if connect == '':
+                print("test")
+                break
 
-            # Manage the visual reprentation of the grid
-            plt.xlim([0, chip.width - 1])
-            plt.ylim([0, chip.height - 1])
-            # plt.axis('off')
+            clean = connect.strip("\n").split(",")
 
-            # random.shuffle(connections)
+            # Reached end of list
 
-            # # Check whether this order has been checked before
-            # if "".join(connections) in checked_order:
-            #     continue
 
-            # checked_order.append("".join(connections))
+            path, cost, chip = move(chip, clean[0], clean[1])
 
-            # Add end-of-list signal
-            connections.append('')
-            finished = True
+            # Gates are not connectable
+            if path is None or not path:
+                # order -= 1
+                finished = False
+                reshuffle = True
+                print(7)
+                malfunction.append(connect)
+                break
 
-            for connect in connections:
-                # Stop when cost are higher than the cheapest iteration
-                if chip.cost >= min_cost and min_cost != 0:
-                    break
+            # Draw the wires in 2d plot TODO remove when done
+            for wires in range(len(path) - 1):
+                wire(path[wires], path[wires + 1], "r")
 
-                connect = connect.strip("\n").split(",")
+            # Visualize the solution TODO remove when done
+            plt.savefig('test.png')
 
-                path, restart, cost, chip = connect_gates(chip, connect)
+            # Remember succesful connection
+            chip.cost += cost
+            total_path.append(path)
+            connected_gates.append((int(clean[0]), int(clean[1])))
 
-                if restart:
-                    break
+        # Remove end-of-list signal
+        del connections[-1]
+        print(chip.cost)
+        # Check for the cheapest iteration
+        if (min_cost == 0 or chip.cost < min_cost) and finished:
+            min_cost = chip.cost
 
-                if not path:
-                    finished = False
+            save_csv(connected_gates, total_path, net_id, chip_id, chip)
 
-                # Remember succesful connection
-                chip.cost += cost
 
-                total_path.append(path)
-                connected_gates.append((int(connect[0]), int(connect[1])))
+def reshuffle_connections(attempt, connections, malfunction):
+    if attempt > 4:
+        attempt = 0
+        error_node = malfunction.pop(0)
+        return connections, attempt
 
-            # Remove end-of-list signal
-            del connections[-1]
+    print(malfunction)
+    error_node = malfunction.pop(0)
+    print(error_node)
+    attempt += 1
+    connections.remove(error_node)
+    connections.insert(0, error_node)
 
-            # Check for the cheapest iteration
-            if (min_cost == 0 or chip.cost < min_cost) and finished:
-                min_cost = chip.cost
+    # new_list = []
 
-                save_csv(connected_gates, total_path, net_id, chip_id, chip)
+    # for node in connections:
+    #     if node == error_node:
+    #         new_list.insert(0, node)
+    #         break
+
+    #     new_list.append(node)
+    
+    # for node in connections[::-1]:
+    #     if node == error_node:
+    #         break
+
+    #     new_list.insert(1, node)
+
+    # connections = new_list
+
+    return connections, attempt
+
+
+def alter_connection_order(connections, order, attempt, chip):
+    if order == 1 or order == 3:
+        connections = connections[::-1]
+
+    elif order >= 2:
+        length_order = {}
+
+        for connect in connections:
+            reorder = connect.strip("\n").split(",")
+            source_coords = [chip.gates[reorder[0]]["x"], chip.gates[reorder[0]]["y"], 0]
+            target_coords = [chip.gates[reorder[1]]["x"], chip.gates[reorder[1]]["y"], 0]
+
+            gate_dif = abs(source_coords[0] - target_coords[0]) + abs(source_coords[1] - target_coords[1])
+
+            while gate_dif in length_order:
+                gate_dif += .1
+
+            length_order[gate_dif] = connect
+        
+        test = sorted(length_order)
+        connections = [length_order[key] for key in test]
+    
+    return connections, order, attempt
 
 
 def load_coordinates(chip):
@@ -182,6 +256,8 @@ def load_coordinates(chip):
 
                 # Replace coordinate with its respective class
                 chip.coordinates[z][y][x] = coordinate
+    
+    return chip
 
 
 def load_gates(chip):
@@ -200,44 +276,14 @@ def load_gates(chip):
 
         # appoint the gate its position on the grid
         chip.coordinates[0][gate_coord["y"]][gate_coord["x"]].gate = gate
-
-
-def connect_gates(chip, connect):
-    """
-    Connect two gates according to the netlist and retrieve its path.
-
-    Args:
-        connect ([type]): [description]
-        connections ([type]): [description]
-
-    Returns:
-        [type]: [description]
-    """
-    # Reached end of list
-    if connect[0] == '':
-        return None, True, None, chip
-
-    path, cost, chip = move(chip, connect[0], connect[1])
-
-    # Gates are not connectable
-    if path is None:
-        return path, True, cost, chip
-
-    # Draw the wires in 2d plot TODO remove when done
-    for wires in range(len(path) - 1):
-        wire(path[wires], path[wires + 1], "r")
-
-    # Visualize the solution TODO remove when done
-    plt.savefig('test.png')
-
-    return path, False, cost, chip
+    
+    return chip
 
 
 def wire(source, goal, colour): #direction
     # Plot 2d TODO Remove when done
     x = [source[0], goal[0]]
     y = [source[1], goal[1]]
-    z = [source[2], goal[2]]
     plt.plot(x, y, colour)
 
 
@@ -256,7 +302,7 @@ def save_csv(net, wires, net_id, chip_id, chip):
         for step in range(len(wires)):
             output.writerow([net[step],wires[step]])
 
-        output.writerow([f"chip_{chip_id}_net_{net_id}", chip.cost])
+        output.writerow([f"chip_{chip_id}_net_{net_id}", chip.cost]) #+ 300 * chip.collisions
 
 
 def move(chip, source_gate, target_gate):
@@ -273,38 +319,21 @@ def move(chip, source_gate, target_gate):
     crossroad = []
     travelled_path = []
 
-    # Source and target always on z-axis 3
+    # Source and target always on z-axis 0
     source_coords = [chip.gates[source_gate]["x"], chip.gates[source_gate]["y"], 0]
     target_coords = [chip.gates[target_gate]["x"], chip.gates[target_gate]["y"], 0]
-    
-    # validity_check = [source_coords, target_coords]
-
-    # for gates in validity_check:
-    #     (x, y, z) = gates
-    #     neighbours = [(x-1, y, z), (x, y-1, z), (x, y+1, z), (x+1, y, z), (x, y, z+1), (x, y, z-1)]
-
-    #     # Check validity of the coordinates around the gates
-    #     for nodes in neighbours:
-    #         if nodes[2] < 0 or nodes[2] >= 8:
-    #             return None
-
-            # # TODO Waar was deze ook al weer voor?
-            # elif chip.coordinates[nodes[2]][nodes[1]][nodes[0]].cost < 300:
-            #     break
-
-            # elif nodes == (x, y, z-1):
-            #     return None
 
     chip = calculate_distance(target_coords, chip)
 
-    start_node = nd.Node(source_coords, None, 1, 0)
+    start = chip.coordinates[0][source_coords[1]][source_coords[0]]
+    start_node = nd.Node(source_coords, None, 1, start.cost + start.distance_to_goal)
     goal_node = nd.Node(target_coords, None, 1, 0)
     crossroad.append(start_node)
 
-    return run_algorithm(source_coords, target_coords, start_node, goal_node, chip, crossroad, travelled_path)
+    return run_algorithm(target_coords, start_node, goal_node, chip, crossroad, travelled_path)
 
 
-def run_algorithm(source_coords, target_coords, start_node, goal_node, chip, crossroad, travelled_path):
+def run_algorithm(target_coords, start_node, goal_node, chip, crossroad, travelled_path):
     """
     Run the algorithm.
 
@@ -320,8 +349,14 @@ def run_algorithm(source_coords, target_coords, start_node, goal_node, chip, cro
     cheapest_path = []
     cheapest_path_cost = 0
     retrace = False
+    path_count = 0
+    latest_addition = start_node
+    # latest_addition = ""
 
     while len(crossroad) > 0:
+        if path_count > 5:
+            break
+
         crossroad.sort()
 
         # Retrieve the node with the lowest cost
@@ -335,13 +370,15 @@ def run_algorithm(source_coords, target_coords, start_node, goal_node, chip, cro
 
                 if not travelled_path:
                     break
+            # print(travelled_path)
 
         travelled_path.append(current_node)
 
         # Check whether the the goal has been reached, return the path
         if current_node == goal_node:
-            
-            path, cost, retrace = retrace_path(current_node, start_node, goal_node, source_coords, chip)
+            print(2)
+            path_count += 1
+            path, cost, retrace = retrace_path(current_node, start_node, chip)
 
             if cost < cheapest_path_cost or cheapest_path_cost == 0:
                 cheapest_path = copy.deepcopy(path)
@@ -351,18 +388,32 @@ def run_algorithm(source_coords, target_coords, start_node, goal_node, chip, cro
 
         neighbours = [(x-1, y, z), (x, y-1, z), (x, y+1, z), (x+1, y, z), (x, y, z+1), (x, y, z-1)]
         chip = calculate_distance(target_coords, chip)
+        
+        if crossroad:
+            latest_addition = crossroad[-1]
+            # print(f"2: {crossroad[-1]}")
 
         for next_door in neighbours:
-            crossroad = check_directions(next_door, current_node, goal_node, chip, crossroad, travelled_path)
+            crossroad = check_directions(next_door, current_node, goal_node, chip, crossroad, travelled_path, False)
+        # print(f"2: {crossroad[-1]}")
+        if crossroad:
+            if current_node != start_node and latest_addition == crossroad[-1]:
+                
+                for next_door in neighbours:
+                    crossroad = check_directions(next_door, current_node, goal_node, chip, crossroad, travelled_path, True)
+
 
     final_path = []
-    
+
     for node in cheapest_path:
         x = node.position[0]
         y = node.position[1]
         z = node.position[2]
 
         final_path.append(node.position)
+
+        # if chip.coordinates[z][y][x].used:
+        #     chip.collisions += 1
 
         if node == start_node:
             continue
@@ -374,12 +425,13 @@ def run_algorithm(source_coords, target_coords, start_node, goal_node, chip, cro
         chip.coordinates[parent_coords[2]][parent_coords[1]][parent_coords[0]].connections[x, y, z].used = True
 
         if node != goal_node:
+            chip.coordinates[z][y][x].used = True
             chip.coordinates[z][y][x].cost = 301
 
     return final_path, cheapest_path_cost, chip
 
 
-def retrace_path(current_node, start_node, goal_node, source_coords, chip):
+def retrace_path(current_node, start_node, chip):
     """
     Retrieve the taken path from one gate to another, from goal to start.
 
@@ -394,14 +446,18 @@ def retrace_path(current_node, start_node, goal_node, source_coords, chip):
     """        
     path = []
     path_cost = 0
+    collisions = 0
 
     # TODO Dit kan hoogstwaarschijnlijk handiger worden geschreven
     while current_node != start_node:
-        path_cost += current_node.cost
+        path_cost += 1
 
-        # x = current_node.position[0]
-        # y = current_node.position[1]
-        # z = current_node.position[2]
+        x = current_node.position[0]
+        y = current_node.position[1]
+        z = current_node.position[2]
+
+        if chip.coordinates[z][y][x].used:
+            collisions =+ 1
         # parent_coords = current_node.parent.position
 
         # # set wire between coordinates
@@ -414,6 +470,7 @@ def retrace_path(current_node, start_node, goal_node, source_coords, chip):
         path.append(current_node)
         current_node = current_node.parent
 
+    path_cost += collisions * 300
     path.append(current_node)
 
     # chip.cost += 1
@@ -422,7 +479,7 @@ def retrace_path(current_node, start_node, goal_node, source_coords, chip):
     return path[::-1], path_cost, True
 
 
-def check_directions(next_door, current_node, goal_node, chip, crossroad, travelled_path):
+def check_directions(next_door, current_node, goal_node, chip, crossroad, travelled_path, colide):
     """
     Check one of the nodes next to the current node.
 
@@ -458,7 +515,10 @@ def check_directions(next_door, current_node, goal_node, chip, crossroad, travel
         return crossroad
     
     # Check if neighbor is in open list and if it has a lower cost value
-    if (add_to_open(neighbour, goal_node, crossroad)):
+    if add_to_open(neighbour, crossroad, colide):
+        # if colide:
+        #     neighbour.heuristic += neighbour.heuristic - 300
+        
         crossroad.append(neighbour)
     
     return crossroad
@@ -483,7 +543,7 @@ def calculate_distance(target_coords, chip):
 
 
 # Check if a neighbor should be added to open list
-def add_to_open(neighbour, goal_node, crossroad):
+def add_to_open(neighbour, crossroad, colide):
     """ Check to see of the node is a valid option to research.
 
     Args:
@@ -492,9 +552,15 @@ def add_to_open(neighbour, goal_node, crossroad):
 
     Returns:
         [type]: [description]
-    """        
-    for node in crossroad:
-        if neighbour.heuristic > node.heuristic:
-            return False
+    """
+    if colide:
+        for node in crossroad:
+            if neighbour.heuristic - 300 > node.heuristic or neighbour.heuristic < 300:
+                return False
+
+    else:
+        for node in crossroad:
+            if neighbour.heuristic > node.heuristic:
+                return False
     
     return True

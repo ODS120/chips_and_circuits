@@ -17,6 +17,7 @@ class Chip():
         self.coordinates = []
         self.gates = {}
         self.cost = 0
+        self.collisions = 0
 
         # Filter id names
         self.chip_id = os.path.basename(chip_data).replace("print_", "").replace(".csv",  "")
