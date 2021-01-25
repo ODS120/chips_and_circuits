@@ -16,6 +16,7 @@ class Chip():
         self.best_cost = float("inf")
         self.best_length = 0
 
+
         with open('output.csv', 'w', newline='') as file:
             output = csv.writer(file)
             output.writerow(["net", "wires"])
@@ -54,7 +55,7 @@ class Chip():
         paths_data = []
         total_resets = 0
 
-        tries = 5
+        tries = 100
         # loop over wires and draw
         while open_wires:
             for wire_id in open_wires:
@@ -63,13 +64,12 @@ class Chip():
                     self.wire_data[wire_id]['source_node'].wires.append(wire_id)
 
                 # calculate path
-                wire_path = self.path_search(self.wire_data[wire_id]['path'][-1], self.wire_data[wire_id]['goal_node'], wire_id)
+                wire_path = self.path_search(self.wire_data[wire_id]['source_node'], self.wire_data[wire_id]['goal_node'], wire_id)
 
                 # if wiring couldn't finish,
                 if wire_path == False:
                     open_wires.remove(wire_id) 
                     closed_wires[wire_id] = self.wire_data[wire_id]['wire_cost']
-                    open_wires == 0
                     break
                 
                 # remove wire from open_wires
@@ -102,7 +102,8 @@ class Chip():
 
 
                 # remove wires, add wire_id to open_wires and clean coordinates
-                if total_resets < tries:
+                if total_resets < tries: 
+                # if self.best_cost == float("inf"):
                     iteration += 1
 
                     # sort wires on cost 
@@ -111,32 +112,15 @@ class Chip():
                     # get wires to redraw
                     remove_wires = sorted_wires[iteration:]
 
-                    # print(f"iteration {iteration}")
-                    # print(f"total_resets {total_resets}")
-                    # print(f"nr_wires {nr_wires}")
-                    # print(f"tries {tries}")
-                    # print(" ")
-
                     # if all wires are infinite, start with different order
                     if sorted_wires[0][1] == float("inf") or (iteration == nr_wires and total_resets < tries):
+                    # if sorted_wires[0][1] == float("inf") or (iteration == nr_wires and self.best_cost == float("inf")):
                         total_resets += 1
                         iteration = 0
                         remove_wires = list(closed_wires.items()) 
-                        if total_resets % (tries/30) == 0:
-                            print(f"Try: {total_resets}")
-
-                        print(f"Resets: {total_resets}")
-                        print("_____")
-
-               
-                    # if iteration == nr_wires and total_resets < tries:
-                    #     total_resets += 1
-                    #     iteration = 0
-                    #     remove_wires = list(closed_wires.items()) 
-                    #     if total_resets % (tries/30) == 0:
-                    #         print(f"Try: {total_resets}")
-                    #     print("_____")
-                    #     # print(f"Try: {total_resets}  {sorted_wires[0][1]}")
+                        if total_resets % (total_resets/100) == 0:
+                            print(f"Resets: {total_resets}")
+                            print("_____")
                         
                                         
                     # iterate over wires and remove
@@ -151,8 +135,6 @@ class Chip():
                         # remove wire from closed wires
                         del closed_wires[wire[0]]
 
-                        # print(f"WirePath {self.wire_data[wire[0]]['path']}")
-                        # print(" ")
                         # iterate over nodes of wire path
                         for node in self.wire_data[wire[0]]['path']:
                             # remove wire_id from coordinate
@@ -170,7 +152,6 @@ class Chip():
                         self.wire_data[wire[0]]['path'] = [self.wire_data[wire[0]]['source_node']]
 
                     random.shuffle(open_wires)
-                    print(len(open_wires))
                     # for id in open_wires:
                     #     print(f"ID:{id} {self.wire_data[id]}")
                     # swap start and end of wire
@@ -209,8 +190,7 @@ class Chip():
             # change cost of current node
             current_node.cost = 301
             options = []
-            # print(f"Current neighbours: {current_node.neighbours}")
-            # print(' ')
+
             for neighbour in current_node.neighbours:                
                 if neighbour == goal_node:
                     # close chosen path for other wires
@@ -246,6 +226,7 @@ class Chip():
                 neighbour.flat_distance_to_goal = self.calculate_flat_distance_to_goal(neighbour, goal_node)
                 # neighbour.heuristic = neighbour.distance_to_goal + neighbour.cost + neighbour.near_gate_cost
                 neighbour.heuristic = neighbour.distance_to_goal + neighbour.cost + neighbour.near_gate_cost
+                # neighbour.heuristic = neighbour.distance_to_goal + neighbour.cost
 
                 options.append(neighbour)      
 
@@ -253,15 +234,13 @@ class Chip():
                 self.wire_data[wire_id]['wire_cost'] = float("inf")
                 return False              
 
-            # sort options on distance to goal
-            # options.sort(key=lambda x: (x.distance_to_goal, x.cost, x.flat_distance_to_goal))
+            # sort options on heuristic to goal
             # options.sort(key=lambda x: (x.heuristic, x.distance_to_goal, x.flat_distance_to_goal))
             options.sort(key=lambda x: (x.heuristic))
 
             # get lowest cost node
-            lowest_cost_node = options[0]
-            # best_option = options.pop(0)
- 
+            lowest_cost_node = options[0]            
+
             # get comparable options
             comparable_options = []
             for option in options:
@@ -270,12 +249,10 @@ class Chip():
             # print(comparable_options)
             best_option = random.choice(comparable_options)
             
-
             # close chosen path for other wires
             current_node.closed_neighbours.append(best_option)
             best_option.closed_neighbours.append(current_node)
             
-
             # store parent of chosen node
             best_option.parent = current_node
 
@@ -300,8 +277,6 @@ class Chip():
             
             current_node = best_option
         return None
-
-
 
 
     def calculate_distance_to_goal(self, current_node, goal_node):
