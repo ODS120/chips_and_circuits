@@ -36,11 +36,11 @@ class Chip():
 
         # create dictionary  wire_id: wire data
         wire_id = 0
+        
         open_wires = []
-        closed_wires = {}
         for wire in wires:
             connect_gates_id = wire.strip("\n").split(",")
-            self.wire_data[wire_id] = {"a": connect_gates_id[0], "b": connect_gates_id[1], "source_node": self.gates[connect_gates_id[0]]['node_object'], "goal_node": self.gates[connect_gates_id[1]]['node_object'], "path": [self.gates[connect_gates_id[0]]['node_object']], "wire_cost": 0, "wire_length": 0}
+            self.wire_data[wire_id] = {"source_gate": connect_gates_id[0], "goal_gate": connect_gates_id[1], "source_node": self.gates[connect_gates_id[0]]['node_object'], "goal_node": self.gates[connect_gates_id[1]]['node_object'], "path": [self.gates[connect_gates_id[0]]['node_object']], "wire_cost": 0, "wire_length": 0}
             open_wires.append(wire_id)
             wire_id += 1
 
@@ -48,7 +48,8 @@ class Chip():
         total_resets = 0
         iteration = 0
         paths_data = []
-        tries = 500
+        closed_wires = {}
+        tries = 1000
 
         # loop over wires and draw
         while open_wires:
@@ -57,16 +58,17 @@ class Chip():
                 if wire_id not in self.wire_data[wire_id]['source_node'].wire_ids:
                     self.wire_data[wire_id]['source_node'].wire_ids.append(wire_id)
 
-                # calculate path
+                # search path for wire
                 wire_path = self.path_search(self.wire_data[wire_id]['source_node'], self.wire_data[wire_id]['goal_node'], wire_id)
 
-                # if wiring couldn't finish,
+                # if wiring couldn't find path, add to closed_wires with infinite cost
                 if wire_path == False:
                     open_wires.remove(wire_id) 
+                    self.wire_data[wire_id]['wire_cost'] = float("inf")
                     closed_wires[wire_id] = self.wire_data[wire_id]['wire_cost']
                     break
                 
-                # remove wire from open_wires
+                # remove wire from open_wires and add to closed_wires
                 open_wires.remove(wire_id) 
                 closed_wires[wire_id] = self.wire_data[wire_id]['wire_cost']
 
@@ -91,7 +93,7 @@ class Chip():
                         path_coordinates = []
                         for node in self.wire_data[wire_id]['path']:
                             path_coordinates.append((node.x_coord, node.y_coord, node.z_coord))
-                        paths_data.append([self.wire_data[wire_id]['a'], self.wire_data[wire_id]['b'], path_coordinates])
+                        paths_data.append([self.wire_data[wire_id]['source_gate'], self.wire_data[wire_id]['goal_gate'], path_coordinates])
 
 
                 # remove wires, add wire_id to open_wires and clean coordinates
@@ -104,17 +106,18 @@ class Chip():
                     # get wires to redraw
                     remove_wires = sorted_wires[iteration:]
 
-                    # if all wires are infinite, start with different order
-                    if sorted_wires[0][1] == float("inf") or (iteration == nr_wires and total_resets < tries):
-                    # if sorted_wires[0][1] == float("inf") or (iteration == nr_wires and self.best_cost == float("inf")):
+                    # if all wires are infinite or iterated over every wire, reset all wires
+                    if sorted_wires[0][1] == float("inf") or iteration == nr_wires:
                         total_resets += 1
                         iteration = 0
                         remove_wires = list(closed_wires.items()) 
+
+                      
                         if total_resets % (total_resets/100) == 0:
                             print(f"Resets: {total_resets}")
                             print("_____")
                                         
-                    # iterate over wires and remove
+                    # iterate over wires and reset paths and data
                     for wire in remove_wires:
                         # add wire_id to open wires
                         open_wires.append(wire[0])
@@ -132,9 +135,11 @@ class Chip():
                                 node.wire_ids.remove(wire[0])
 
                             # open path
-                            if node.parent in node.closed_neighbours:
-                                node.closed_neighbours.remove(node.parent)
-                                node.parent.closed_neighbours.remove(node)
+                            if node.parent:
+                                if node.parent in node.closed_neighbours:
+                                    node.closed_neighbours.remove(node.parent)
+                                if node in node.parent.closed_neighbours:
+                                    node.parent.closed_neighbours.remove(node)
                             
                             # if node intersection is free, change node costs
                             if len(node.wire_ids) == 0:
@@ -178,7 +183,12 @@ class Chip():
             current_node.cost = 301
             options = []
 
-            for neighbour in current_node.neighbours:                
+            # print(current_node)
+            # print(current_node.neighbours)  
+            # print(current_node.closed_neighbours)  
+            # print(" ")  
+
+            for neighbour in current_node.neighbours:    
                 if neighbour == goal_node:
                     # close chosen path for other wires
                     current_node.closed_neighbours.append(neighbour)
@@ -200,19 +210,26 @@ class Chip():
                     return True
 
                 # store parent
+                # print(neighbour in current_node.closed_neighbours)
                 if neighbour in current_node.closed_neighbours:
                     continue
                 if neighbour.gate and neighbour != goal_node:
                     continue
 
                 neighbour.distance_to_goal = self.calculate_distance_to_goal(neighbour, goal_node)
-                neighbour.heuristic = neighbour.distance_to_goal + neighbour.cost + neighbour.near_gate_cost
+                # neighbour.heuristic = neighbour.distance_to_goal + neighbour.cost + neighbour.near_gate_cost
+                neighbour.heuristic = neighbour.distance_to_goal + neighbour.cost
 
                 options.append(neighbour)      
 
             if len(options) == 0:
-                self.wire_data[wire_id]['wire_cost'] = float("inf")
                 return False              
+            # if len(options) == 0:
+            #     if not current_node.parent:
+            #         return False
+            #     current_node.parent.closed_neighbours.append(current_node)
+            #     current_node = current_node.parent
+            #     continue            
 
             # sort options on heuristic to goal
             options.sort(key=lambda x: (x.heuristic))
@@ -279,13 +296,15 @@ class Chip():
     # load all the coordinate classes
     def load_coordinates(self):
         # create 3d grid list with zeroes
-        self.coordinates = [[[0 for z in range(8)] for y in range(self.height)] for x in range(self.width)]
-        # replace zeroes with node objects
-        for x in range(self.width):
-            for y in range(self.height):
-                for z in range(8):
-                    coordinate = Coordinate(x, y, z)
-                    self.coordinates[x][y][z] = coordinate
+        # self.coordinates = [[[0 for z in range(8)] for y in range(self.height)] for x in range(self.width)]
+        # # replace zeroes with node objects
+        # for x in range(self.width):
+        #     for y in range(self.height):
+        #         for z in range(8):
+        #             coordinate = Coordinate(x, y, z)
+        #             self.coordinates[x][y][z] = coordinate
+        # create 3d grid list with node objects
+        self.coordinates = [[[Coordinate(x, y, z) for z in range(8)] for y in range(self.height)] for x in range(self.width)]
 
         # get node neighbours for every coordinate
         for x in range(self.width):
@@ -347,6 +366,10 @@ class Coordinate():
 
         self.parent = None
         self.wire_ids = []
+
+    # Compare nodes
+    def __eq__(self, other):
+        return self.x_coord == other.x_coord and self.y_coord == other.y_coord and self.z_coord == other.z_coord
 
     # print node
     def __repr__(self):
