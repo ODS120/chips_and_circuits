@@ -119,7 +119,8 @@ class Chip():
                     # iterate over wires and reset paths and data
                     for wire in remove_wires:
                         wire_id = wire[0]
-                        # add wire_id to open wires and  remove wire from closed wires
+
+                        # add wire_id to open wires and remove wire from closed wires
                         open_wires.append(wire_id)
                         del closed_wires[wire_id]
 
@@ -135,16 +136,27 @@ class Chip():
 
                             # open path
                             if node.parent:
+                                # node.closed_neighbours.remove(node.parent)
+                                # node.parent.closed_neighbours.remove(node)
                                 if node.parent in node.closed_neighbours:
                                     node.closed_neighbours.remove(node.parent)
+                                    print("XXX")
+                                else:
+                                    print(node)
                                 if node in node.parent.closed_neighbours:
                                     node.parent.closed_neighbours.remove(node)
+                                    print("YYY")
+                                else:
+                                    print(node)
+                                print(" ")
                             
-                            # if node intersection is free, change node costs
+                                    
+                            # if node intersection is free, change node costs back to default
                             if len(node.wire_ids) == 0:
                                 node.cost = 1
                         self.wire_data[wire_id]['path'] = [self.wire_data[wire_id]['source_node']]
 
+                    # shuffle order of open_wires to be drawn
                     random.shuffle(open_wires)
                     # swap start and end of wire
                     for wire_id in open_wires:
@@ -180,12 +192,7 @@ class Chip():
         while current_node != goal_node:
             # change cost of current node
             current_node.cost = 301
-            options = []
-
-            # print(current_node)
-            # print(current_node.neighbours)  
-            # print(current_node.closed_neighbours)  
-            # print(" ")  
+            options = [] 
 
             for neighbour in current_node.neighbours:    
                 if neighbour == goal_node:
