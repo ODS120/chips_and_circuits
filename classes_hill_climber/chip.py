@@ -23,7 +23,7 @@ class Chip():
 
     def load_grid(self, chip_data):
         """
-        Create a 3D grid
+        Create an internal 3d grid on which the case will be represented
 
         Args:
             chip_data (file): The coordinates of the gates

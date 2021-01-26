@@ -1,7 +1,7 @@
 '''
 Jan-Joost Raedts, Olaf Stringer, Martijn van Veen,
 
-Hill Climber algorithm explanation
+Hill Climber based algorithm 
 '''
 
 import csv
@@ -121,7 +121,7 @@ def run_algorithm(chip, open_paths):
             if total_cost < chip.best_cost:
                 chip.best_cost = total_cost
                 chip.best_length = total_length
-                print(f"IMPROVED Total cost: {chip.best_cost}  Total length: {chip.best_length}  Iteration: {iteration}  Resets: {total_resets}")
+                print(f"Total cost: {chip.best_cost}  Total length: {chip.best_length}  Iteration: {iteration}  Resets: {total_resets}")
                 chip.best_paths_data = []
 
                 # Save best path in right format for CSV output
@@ -196,7 +196,7 @@ def path_search(chip, source_node, goal_node, path_id):
 
             # Calculate heuristic of neighbour node and append node to step options
             neighbour.distance_to_goal = calculate_distance_to_goal(neighbour, goal_node)
-            neighbour.heuristic = neighbour.distance_to_goal + neighbour.cost
+            neighbour.heuristic = neighbour.distance_to_goal + neighbour.cost + neighbour.near_gate_cost
             options.append(neighbour)      
 
         # Return false routing if no step options available
