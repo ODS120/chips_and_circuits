@@ -1,7 +1,7 @@
 
 
 from sys import argv
-from algorithms import astar
+from algorithms import astar_old
 
 if __name__ == "__main__":
     # check command line arguments
@@ -11,4 +11,4 @@ if __name__ == "__main__":
 
     # create chip object from files
  
-    astar.main(argv[1], argv[2])
+    astar_old.main(argv[1], argv[2])
