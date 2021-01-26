@@ -2,8 +2,7 @@
 
 from sys import argv
 # from hill_climber import Chip
-from hill_climb_serie_3 import Chip
-from algorithms import astar
+from algorithms import hill_climber
 
 if __name__ == "__main__":
     # check command line arguments
@@ -11,9 +10,8 @@ if __name__ == "__main__":
         print("Usage: 'python main.py [print_x] [netlist_y]")
         exit(1)
 
-    # create chip object from files
- 
-    chip = Chip(argv[1], argv[2])
+   
+    hill_climber.main(argv[1], argv[2])
 
     
 
