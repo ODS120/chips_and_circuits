@@ -4,25 +4,13 @@ from . import gate as gt
 
 
 class Chip():
-    """
-    Run path search algorithm
-
-    Args:
-        chip ([type]): [description]
-        source_node ([type]): [description]
-        goal_node ([type]): [description]
-        wire_id ([type]): [description]
-    
-    Returns:
-        [Bool]: [description]
-    """   
     def __init__(self, chip_data, netlist):
         self.height = 0
         self.width = 0
         self.depth = 7
         self.coordinates = []
         self.gates = {}
-        self.wire_data = {}
+        self.path_data = {}
 
         self.best_cost = float("inf")
         self.best_length = 0
@@ -35,69 +23,55 @@ class Chip():
 
     def load_grid(self, chip_data):
         """
-        Run path search algorithm
+        Create a 3D grid
 
         Args:
-            chip ([type]): [description]
-            source_node ([type]): [description]
-            goal_node ([type]): [description]
-            wire_id ([type]): [description]
-        
-        Returns:
-            [Bool]: [description]
+            chip_data (file): The coordinates of the gates
         """   
         with open(chip_data) as chip_grid:
             next(chip_grid)
-
+            # Iterate over chip data; store gate info and largest coordinates of the chip
             for line in chip_grid:
                 gate_info = line.strip("\n").split(",")
                 self.gates[gate_info[0]] = {"x_coord": int(gate_info[1]), "y_coord": int(gate_info[2]), "z_coord": 0, "node_object": None,  }
 
-                # find the max x and y coordinate
+                # Find the max x and y coordinate
                 if int(gate_info[1]) > self.width:
                     self.width = int(gate_info[1])
                 if int(gate_info[2]) > self.height:
                     self.height = int(gate_info[2])
 
-            # add borders to the grid
+            # Add borders to the grid
             self.width += 2
             self.height += 2 
 
 
-    # load all the coordinate classes
+    # Load all the coordinate classes
     def load_coordinates(self):
         """
-        Run path search algorithm
+        Create 3d list with coordinate node objects
 
-        Args:
-            chip ([type]): [description]
-            source_node ([type]): [description]
-            goal_node ([type]): [description]
-            wire_id ([type]): [description]
-        
-        Returns:
-            [Bool]: [description]
         """   
-        # create 3d grid list with node objects
+        # Create 3d grid list with node objects
         self.coordinates = [[[crd.Coordinate(x, y, z) for z in range(8)] for y in range(self.height)] for x in range(self.width)]
 
-        # get node neighbours for every coordinate
+        # Find neighbours for every coordinate node
         for x in range(self.width):
             for y in range(self.height):
                 for z in range(8):
                     coordinate = self.coordinates[x][y][z]
 
-                    # create x axis neighbours
+                    # Get x axis neighbours
                     if x + 1 < self.width:
                         coordinate.neighbours.append(self.coordinates[x+1][y][z])
                     if x - 1 >= 0:
                         coordinate.neighbours.append(self.coordinates[x-1][y][z])
-                    # create y axis neighbours
+                    # Get y axis neighbours
                     if y + 1 < self.height:
                         coordinate.neighbours.append(self.coordinates[x][y+1][z])
                     if y - 1 >= 0:
                         coordinate.neighbours.append(self.coordinates[x][y-1][z])
-                    # create z axis neighbours
+                    # Get z axis neighbours
                     if z + 1 < 8:
                         coordinate.neighbours.append(self.coordinates[x][y][z+1])
                     if z - 1 >= 0:
@@ -106,24 +80,18 @@ class Chip():
 
     def load_gates(self):
         """
-        Run path search algorithm
+        Create all gate objects
 
-        Args:
-            chip ([type]): [description]
-            source_node ([type]): [description]
-            goal_node ([type]): [description]
-            wire_id ([type]): [description]
-        
-        Returns:
-            [Bool]: [description]
         """   
+        # Iterate over all gates
         for gate_id in self.gates:
             gate_info = self.gates[gate_id]
-            # create gate object 
+            # Create gate object
             gate_object = gt.Gate(gate_id, gate_info["x_coord"], gate_info["y_coord"], gate_info["z_coord"], self.coordinates[gate_info["x_coord"]][gate_info["y_coord"]][gate_info["z_coord"]])
             
             self.gates[gate_id]["node_object"] = self.coordinates[gate_info["x_coord"]][gate_info["y_coord"]][gate_info["z_coord"]]
             self.coordinates[gate_info["x_coord"]][gate_info["y_coord"]][gate_info["z_coord"]].gate = gate_object
 
+            # Add extra bonus cost for the neighbouring nodes of a gate node
             for gate_neighbour in gate_object.node.neighbours:
                 gate_neighbour.near_gate_cost = .5
