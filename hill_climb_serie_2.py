@@ -59,7 +59,7 @@ class Chip():
 
         counter = 1
         paths_best_iteration = []
-        iterations = 500
+        iterations = 5000
 
         while open_wires:
             # add wire_id to source node
