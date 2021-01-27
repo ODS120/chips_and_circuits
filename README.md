@@ -1,3 +1,30 @@
+'Chips and Circuits'
+=============
+### Study course assignment
+### Programmeertheorie - Final assignment
+### Minor Programmeren Najaar 2020-2021
+### Universiteit van Amsterdam
+### Team'JOM-Intelligence'
+#### Martijn van Veen, Olaf Stringer, Jan-Joost Raedts
+
+
+## Introduction
+The setup of this assignment is creating an algorithm that is able to find an optimal routing of wires connecting several (uniform)logic-gates that form a hypothetical microchip.
+Given are a list of three chips with the location of its gates and three lists of different configurations of required connections between these gatges ('netlists') on each of those chips. All lists are in .csv format. These chip-netlists combinations vary in size and (potential) complexity.
+The metric used to judge an algorithm’s efficiency (and to compare them) is the total ‘cost’ of an algorithm.
+
+Cost is calculated through a formula that adds up the number of wires laid to connect all gates by an algorithm, added to an additional cost of ‘300’ for each crossing wire (which in the microchip-analogy, need to be avoided because of short circuiting and heat risks)
+
+The gates are located on a one-level x,y Mahattan-style grid'ed field, but the algorithms are allowed to take up to seven layers of x,y,z routing space on top of that (each step up or down being one additional ‘cost’).
+
+Throughout the 4-week course, along several ‘Milestones’ two final algorithms were to be created in any (of the in previous parts of the Minor introduced) programming language of choice. The basis for the choices to be made was formed by an introduction to heuristics and programmingtheory during this course.
+
+The program created for this assignment has to be able to hold a data structure for a grid and fixed gates, for a netlist and have a way of calculating and presenting the chosen paths and total cost.
+A more optimal route is a lower cost route.
+These are the final two algoritms created by this team:
+
+
+## First algorithm
 The first algorithm one can choose from is a `Best First Search` algorithm. To properly run this, the following command line has to be used and altered:
 `python main.py print.csv netlist.csv`
 Be sure to use the correct python call. The `print.csv` file has to be altered regarding the chip one wishes to use (print_0/print_1/print_2), while the `netlist.csv` file is altered to one of the netlists (netlist_1, netlist_2, etc).
@@ -11,6 +38,7 @@ To further delve into the algorithm, after it has succeeded in connected two gat
 If a connection order has been able to connect all gates, these results will be saved as a csv file. In the case that a later order manages to connect the gates with cheaper results, the existing csv will be overwritten and the cheapest will be saved.
 
 
+## Second algorithm
 The second algorithm is a `Hill climber` based algorithm. To properly run this, the following command line has to be used and altered:
 `python main.py print.csv netlist.csv`
 Be sure to use the correct python call. The `print.csv` file has to be altered regarding the chip one wishes to use (print_0/print_1/print_2), while the `netlist.csv` file is altered to one of the netlists (netlist_1, netlist_2, etc).
@@ -29,3 +57,26 @@ The explanation above can be summarised in the following steps:
 - Repeat until there is 1 path left to be rerouted
 - Remove all paths and restart the process above with a different order of the gates
 - The existing csv will be overwritten and the cheapest path combination will be saved
+
+
+## Running the program
+### Running the algoritms
+To run either of the two algorithms, their respective program needs to be run with the desired chip and netlist locations added as commandline arguments.
+
+#### Algorithm 1:
+At the commandprompt, enter:
+python3 main_astar.py data/chip_{chipnumber of choice}/print_{number corresponding with the printplate of chosen chip}.csv data/chip_{chip of choice}/netlist_{number corresponding to the netlist of choice available for the chose chip}.csv
+
+f.i., in the case of wanting to run netlist_1 from chip_0, type:
+`python3 main_astar.py data/chip_0/print_0.csv data/chip_0/netlist_1.csv`
+
+#### Algorithm 2:
+At the commandprompt, enter:
+python3 main_hill_climber.py data/chip_{chipnumber of choice}/print_{number corresponding with the printplate of chosen chip}.csv data/chip_{chip of choice}/netlist_{number corresponding to the netlist of choice available for the chose chip}.csv
+
+f.i., in the case of wanting to run netlist_1 from chip_0, type:
+`python3 main_hill_climber.py data/chip_0/print_0.csv data/chip_0/netlist_1.csv`
+
+### Running the visualisation
+After having run either of the algorithms in the manner described above, at the commandline enter:
+`3d_model/manage.py runserver`
