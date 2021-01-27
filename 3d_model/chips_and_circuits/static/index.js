@@ -2,8 +2,6 @@ let traces = [];
  
 lines_xyz = graph_data;
 dimensions = settings_data;
-console.log(graph_data)
-console.log(settings_data)
 
 for (i = 0; i < lines_xyz.length; i++) {
     
