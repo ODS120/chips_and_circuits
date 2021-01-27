@@ -23,7 +23,7 @@ class Coordinate():
         self.distance_to_goal = None
         self.heuristic = None
 
-        self.parent = None
+        self.parent = {}
         self.path_ids = []
 
     # Compare nodes

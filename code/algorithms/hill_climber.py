@@ -94,7 +94,7 @@ def run_algorithm(chip, open_paths):
     total_resets = 0
     iteration = 0
     closed_paths = {}
-    tries = 20
+    tries = 200
 
     # Find path for every open path
     while open_paths:
@@ -131,7 +131,7 @@ def run_algorithm(chip, open_paths):
             if total_cost < chip.best_cost:
                 chip.best_cost = total_cost
                 chip.best_length = total_length
-                print(f"Total cost: {chip.best_cost}  Total length: {chip.best_length}  Iteration: {iteration}  Resets: {total_resets}")
+                print(f"Total cost: {chip.best_cost}  Iteration: {iteration}  Resets: {total_resets}")
                 chip.best_paths_data = []
 
                 # Save best path in right format for CSV output
@@ -181,10 +181,10 @@ def path_search(chip, source_node, goal_node, path_id):
         # Loop over all neighbour nodes of current node
         for neighbour in current_node.neighbours:    
             if neighbour == goal_node:
-                # Close chosen path for other routes and store parent of node
+                # Close chosen path for other routes and store parent of node of this path
                 current_node.closed_neighbours.append(goal_node)
                 goal_node.closed_neighbours.append(current_node)
-                goal_node.parent = current_node
+                goal_node.parent[path_id] = current_node
                 # Add path_id to node's path_ids; the paths that make use of this specific node
                 goal_node.path_ids.append(path_id)
 
@@ -220,10 +220,10 @@ def path_search(chip, source_node, goal_node, path_id):
                 comparable_options.append(option)
         best_option = random.choice(comparable_options)
         
-        # Close chosen step for other paths, store parent of node
+        # Close chosen step for other paths, store parent of node of this path
         current_node.closed_neighbours.append(best_option)
         best_option.closed_neighbours.append(current_node)
-        best_option.parent = current_node 
+        best_option.parent[path_id] = current_node
         # Add path_id to node's path_ids; the paths that make use of this specific node
         best_option.path_ids.append(path_id)
     
@@ -270,12 +270,13 @@ def remove_paths_algorithm(chip, open_paths, closed_paths, remove_paths):
             if path_id in node.path_ids:
                 node.path_ids.remove(path_id)
 
-            # Remove closed step option from coordinate node
-            if node.parent:
-                if node.parent in node.closed_neighbours:
-                    node.closed_neighbours.remove(node.parent)
-                if node in node.parent.closed_neighbours:
-                    node.parent.closed_neighbours.remove(node)
+            # Reopen step option for this node           
+            if path_id in node.parent:
+                if node.parent[path_id] in node.closed_neighbours:
+                    node.closed_neighbours.remove(node.parent[path_id])
+                if node in node.parent[path_id].closed_neighbours:  
+                    node.parent[path_id].closed_neighbours.remove(node)
+                del node.parent[path_id]
 
             # If node intersection is free, change node costs back to default
             if len(node.path_ids) == 0:
@@ -318,18 +319,15 @@ def generate_output(chip, chip_id, net_id):
         chip_id (int): Chip number
         net_id (int): Netlist number
     """    
+    if chip.best_cost == float("inf"):
+        print("No solution found, rerun algorithm and/or increase number of tries")
 
-    print("FINISH")
     # Loop over stored paths and save in CSV file
     for path_data in chip.best_paths_data:
-        print(path_data)
-        
         # store path source, goal and path_nodes in CSV output file
         with open('output/output.csv', 'a', newline='') as results:
             output = csv.writer(results)
-            output.writerow([(path_data[0], path_data[1]), path_data[2]])
-
-    print(f"Best cost: {chip.best_cost} ")            
+            output.writerow([(path_data[0], path_data[1]), path_data[2]])       
 
     # Add chip_id, net_id and chip_cost to CSV output file
     with open('output/output.csv', 'a', newline='') as file:
