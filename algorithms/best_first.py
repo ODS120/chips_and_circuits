@@ -76,7 +76,7 @@ def load_connections(netlist, chip, chip_id, net_id):
         print(attempt)
         if reshuffle:
             error_gates = malfunction.pop(0)
-            connections, attempt = reshuffle_connections(attempt, connections, error_gates)
+            connections, attempt, order = reshuffle_connections(attempt, connections, error_gates, order)
             reshuffle = False
         else:
             attempt = 0
@@ -133,7 +133,7 @@ def load_connections(netlist, chip, chip_id, net_id):
             save_csv(connected_gates, total_path, net_id, chip_id, chip)
 
 
-def reshuffle_connections(attempt, connections, error_gates):
+def reshuffle_connections(attempt, connections, error_gates, order):
     """
     Reshuffle the currently ordered connection list so that the
     hindering connection are placed in front.
@@ -150,15 +150,16 @@ def reshuffle_connections(attempt, connections, error_gates):
     # No more than 10 attempt to reshuffle
     if attempt > 9:
         attempt = 0
+        order += 1
 
-        return connections, attempt
+        return connections, attempt, order
 
     # Put the not connectable gates in the front
     connections.remove(error_gates)
     connections.insert(0, error_gates)
     attempt += 1
 
-    return connections, attempt
+    return connections, attempt, order
 
 
 def alter_connection_order(connections, order, chip):
