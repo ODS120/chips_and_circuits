@@ -1,0 +1,10 @@
+"""
+Requirements.txt
+
+Chips & Circuits 2021
+Martijn van Veen, Olaf Stringer, Jan-Joost Raedts
+
+All extra libraries that the algorithm needs
+"""
+
+No Requirements

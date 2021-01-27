@@ -1,5 +1,5 @@
 """
-wire.py
+chip.py
 
 Chips & Circuits 2021
 Martijn van Veen, Olaf Stringer, Jan-Joost Raedts
@@ -13,7 +13,7 @@ from . import gate as gt
 
 
 class Chip():
-    def __init__(self, chip_data, netlist):
+    def __init__(self, chip_data):
         self.height = 0
         self.width = 0
         self.depth = 7

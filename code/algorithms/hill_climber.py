@@ -33,7 +33,7 @@ def main(chip_data, netlist):
     net_id = os.path.basename(netlist).replace("netlist_", "").replace(".csv", "")
 
     # Initiate Chip class
-    chip = cp.Chip(chip_data, netlist)
+    chip = cp.Chip(chip_data)
     open_paths = transform_data_input(chip, netlist)
 
     # Run algoritm and generate output

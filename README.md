@@ -60,7 +60,7 @@ The explanation above can be summarised in the following steps:
 
 
 ## Running the program
-### Running the algoritms
+### Running the algorithms
 At the commandprompt, start by entering:
 python3 code/main.py data/chip_{chipnumber of choice}/print_{number corresponding with the printplate of chosen chip}.csv data/chip_{chip of choice}/netlist_{number corresponding to the netlist of choice available for the chose chip}.csv
 
