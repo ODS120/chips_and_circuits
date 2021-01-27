@@ -8,15 +8,15 @@ Load a webpage which processes data files from the Chips & Circuits case
 on which a graph can be seen that visualises the connected gates on the chip.
 """
 
-from django.shortcuts import render
+
 from json import dumps
+from django.shortcuts import render
 
 
-# Create your views here.
 def index(request):
     """
     Load a page on which two files can be loaded.
-    """    
+    """
     return render(request, "chips_and_circuits/index.html")
 
 
@@ -29,7 +29,7 @@ def upload_csv(request):
         # Prepare the output.csv file
         graph_data = []
         netlist_file = request.FILES["netlist_file"]
-        netlist_data = netlist_file.read().decode("utf-8")   
+        netlist_data = netlist_file.read().decode("utf-8")
         netlist_data = netlist_data.replace('"(', '')
         netlist_data = netlist_data.replace(')]"', '')
         netlist_data = netlist_data.split('\r\n')
@@ -80,7 +80,7 @@ def upload_csv(request):
                 graph_data.append(gate_coordinate)
 
         limits = [str(x_axis_limit + 2), str(y_axis_limit + 2), z_axis_limit]
-
+        print(graph_data)
         return render(request, "chips_and_circuits/index.html", {
             "graph_data_JSON": dumps(graph_data),
             "settings_JSON": dumps(limits)

@@ -1,10 +1,12 @@
 '''
-best_first.py TODO
+best_first.py
 
+Chips & Circuits 2021
 Martijn van Veen, Olaf Stringer, Jan-Joost Raedts
 
-Implement a best first algorithm.
+Implement a Best First Search algorithm.
 '''
+
 import csv
 import copy
 import os

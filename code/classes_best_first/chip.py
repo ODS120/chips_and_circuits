@@ -1,13 +1,13 @@
 """
-classes.py
-"""
-import csv
-import random
-import os
-import matplotlib.pyplot as plt
+chip.py
 
-import coordinate as crd
-import wire as wr
+Chips & Circuits 2021
+Martijn van Veen, Olaf Stringer, Jan-Joost Raedts
+
+Implements the internal representation of a chip.
+"""
+
+import os
 
 class Chip():
     def __init__(self, chip_data, netlist):

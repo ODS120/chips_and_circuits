@@ -61,21 +61,15 @@ The explanation above can be summarised in the following steps:
 
 ## Running the program
 ### Running the algoritms
-To run either of the two algorithms, their respective program needs to be run with the desired chip and netlist locations added as commandline arguments.
+At the commandprompt, start by entering:
+python3 code/main.py data/chip_{chipnumber of choice}/print_{number corresponding with the printplate of chosen chip}.csv data/chip_{chip of choice}/netlist_{number corresponding to the netlist of choice available for the chose chip}.csv
 
-#### Algorithm 1:
-At the commandprompt, enter:
-python3 main_astar.py data/chip_{chipnumber of choice}/print_{number corresponding with the printplate of chosen chip}.csv data/chip_{chip of choice}/netlist_{number corresponding to the netlist of choice available for the chose chip}.csv
-
-f.i., in the case of wanting to run netlist_1 from chip_0, type:
-`python3 code/main_astar.py data/chip_0/print_0.csv data/chip_0/netlist_1.csv`
-
-#### Algorithm 2:
-At the commandprompt, enter:
-python3 main_hill_climber.py data/chip_{chipnumber of choice}/print_{number corresponding with the printplate of chosen chip}.csv data/chip_{chip of choice}/netlist_{number corresponding to the netlist of choice available for the chose chip}.csv
+Upon running the program, a choice will be given to either use the `Best First Search` Algorithm by entering 1 or use the `Hill Climber` algorithm by entering 2.
 
 f.i., in the case of wanting to run netlist_1 from chip_0, type:
-`python3 code/main_hill_climber.py data/chip_0/print_0.csv data/chip_0/netlist_1.csv`
+`python3 code/main.py data/chip_0/print_0.csv data/chip_0/netlist_1.csv`
+
+After completing processing the chosen chip and netlist combination through the algorithm of choice, the running time will be shown in seconds. If the algorithm was able to find a solution, the `output.csv` file in the `output` folder will have been updated with these recent results.
 
 ### Running the visualisation
 After having run either of the algorithms in the manner described above, at the commandline enter:

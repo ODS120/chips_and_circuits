@@ -1,3 +1,12 @@
+"""
+coordinate.py
+
+Chips & Circuits 2021
+Martijn van Veen, Olaf Stringer, Jan-Joost Raedts
+
+Implements the internal representation of a coordinate.
+"""
+
 
 class Coordinate(): 
     def __init__(self, x, y, z):

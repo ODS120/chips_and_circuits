@@ -1,7 +1,10 @@
 '''
-Jan-Joost Raedts, Olaf Stringer, Martijn van Veen,
+hill_climber.py
 
-Hill Climber based algorithm 
+Chips & Circuits 2021
+Martijn van Veen, Olaf Stringer, Jan-Joost Raedts
+
+Implement a Hill Climber based algorithm.
 '''
 
 import csv
@@ -332,6 +335,3 @@ def generate_output(chip, chip_id, net_id):
     with open('output/output.csv', 'a', newline='') as file:
         output = csv.writer(file)
         output.writerow([f"chip_{chip_id}_net_{net_id}", chip.best_cost]) 
-
-
-
