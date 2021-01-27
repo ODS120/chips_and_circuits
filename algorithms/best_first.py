@@ -36,11 +36,6 @@ def main(chip_data, netlist):
     chip = cp.Chip(chip_data, netlist)
     load_connections(netlist, chip, chip_id, net_id)
 
-    # TODO inbouwen in uiteindelijke visualisatie
-    with open('dimensions.csv', 'w') as file:
-        output = csv.writer(file)
-        output.writerow([chip.width, chip.height, chip.depth])
-
     end = time.perf_counter()
     print(end - start)
 
