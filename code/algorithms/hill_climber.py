@@ -54,7 +54,7 @@ def transform_data_input(chip, netlist):
         open_paths (list): The path id's that need to be connected
     """
     # Create CSV file for output data
-    with open('output.csv', 'w', newline='') as file:
+    with open('output/output.csv', 'w', newline='') as file:
         output = csv.writer(file)
         output.writerow(["net", "wires"])
 
@@ -322,14 +322,14 @@ def generate_output(chip, chip_id, net_id):
         print(path_data)
         
         # store path source, goal and path_nodes in CSV output file
-        with open('output.csv', 'a', newline='') as results:
+        with open('output/output.csv', 'a', newline='') as results:
             output = csv.writer(results)
             output.writerow([(path_data[0], path_data[1]), path_data[2]])
 
     print(f"Best cost: {chip.best_cost} ")            
 
     # Add chip_id, net_id and chip_cost to CSV output file
-    with open('output.csv', 'a', newline='') as file:
+    with open('output/output.csv', 'a', newline='') as file:
         output = csv.writer(file)
         output.writerow([f"chip_{chip_id}_net_{net_id}", chip.best_cost]) 
 

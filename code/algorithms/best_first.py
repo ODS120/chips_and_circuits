@@ -259,7 +259,7 @@ def save_csv(net, wires, net_id, chip_id, chip):
         chip_id (int): ID to identify the current chip
         chip (object): Internal representation of the chip
     """
-    with open('output.csv', 'w') as file:
+    with open('output/output.csv', 'w') as file:
         # Write first line
         output = csv.writer(file)
         output.writerow(["net", "wires"])
