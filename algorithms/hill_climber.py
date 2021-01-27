@@ -7,6 +7,7 @@ Hill Climber based algorithm
 import csv
 import random
 import os
+import time
 
 from classes_hill_climber import chip as cp
 from classes_hill_climber import gate as gt
@@ -21,6 +22,9 @@ def main(chip_data, netlist):
         chip_data (file): The coordinates of the gates
         netlist (file): The way the gates are to be connected
     """
+    # Start timer
+    start = time.perf_counter()
+
     # Isolate file digits for output
     chip_id = os.path.basename(chip_data).replace("print_", "").replace(".csv",  "")
     net_id = os.path.basename(netlist).replace("netlist_", "").replace(".csv", "")
@@ -32,6 +36,9 @@ def main(chip_data, netlist):
     # Run algoritm and generate output
     run_algorithm(chip, open_paths)
     generate_output(chip, chip_id, net_id)
+    
+    end = time.perf_counter()
+    print(f"Runtime in seconds: {end - start}")
 
 
 def transform_data_input(chip, netlist):
@@ -84,7 +91,7 @@ def run_algorithm(chip, open_paths):
     total_resets = 0
     iteration = 0
     closed_paths = {}
-    tries = 100
+    tries = 3
 
     # Find path for every open path
     while open_paths:
@@ -139,18 +146,14 @@ def run_algorithm(chip, open_paths):
                 sorted_paths = sorted(closed_paths.items(), key=lambda x: x[1])
                 remove_paths = sorted_paths[iteration:]
 
-                # If best path has infinite cost or algorithm iterated over every path; reroute all paths
+                # If best path has infinite cost or algorithm iterated over every cycle; reroute all paths
                 if sorted_paths[0][1] == float("inf") or iteration == nr_paths:
                     total_resets += 1
                     iteration = 0
                     remove_paths = list(closed_paths.items()) 
-                    
-                    if (total_resets % (total_resets/10)) == 0:
-                        print(f"Resets: {total_resets}")
-                        print("_____")
                 # Remove paths and add path_ids to open_paths to reroute
                 open_paths = remove_paths_algorithm(chip, open_paths, closed_paths, remove_paths)
-
+       
             
 def path_search(chip, source_node, goal_node, path_id):
     """
@@ -249,7 +252,7 @@ def remove_paths_algorithm(chip, open_paths, closed_paths, remove_paths):
     # Iterate over path_ids to remove path
     for path in remove_paths:
         path_id = path[0]
-
+        
         # Add path_id to open paths and remove path_id from closed paths
         open_paths.append(path_id)
         del closed_paths[path_id]
