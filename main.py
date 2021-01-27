@@ -10,7 +10,7 @@ if __name__ == "__main__":
     
     user_input = None
     while user_input == None:
-        user_input = int(input("Would you like to run the Best-First algorithm (1) or the Hill-Climber algorithm (2)?\nChoose 1 or 2\n"))
+        user_input = int(input("Would you like to run the Best-First algorithm or the Hill-Climber algorithm?\nChoose 1 or 2\n 1. Best-First algorithm\n 2. Hill-Climber algorithm\n"))
         if user_input == 1:
             print("Best First algorithm\n")
             best_first.main(argv[1], argv[2])
