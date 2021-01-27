@@ -131,7 +131,6 @@ def run_algorithm(chip, open_paths):
             if total_cost < chip.best_cost:
                 chip.best_cost = total_cost
                 chip.best_length = total_length
-                print(f"Total cost: {chip.best_cost}  Total length: {chip.best_length}  Iteration: {iteration}  Resets: {total_resets}")
                 chip.best_paths_data = []
 
                 # Save best path in right format for CSV output
@@ -319,17 +318,13 @@ def generate_output(chip, chip_id, net_id):
         net_id (int): Netlist number
     """    
 
-    print("FINISH")
     # Loop over stored paths and save in CSV file
     for path_data in chip.best_paths_data:
-        print(path_data)
         
         # store path source, goal and path_nodes in CSV output file
         with open('output/output.csv', 'a', newline='') as results:
             output = csv.writer(results)
-            output.writerow([(path_data[0], path_data[1]), path_data[2]])
-
-    print(f"Best cost: {chip.best_cost} ")            
+            output.writerow([(path_data[0], path_data[1]), path_data[2]])       
 
     # Add chip_id, net_id and chip_cost to CSV output file
     with open('output/output.csv', 'a', newline='') as file:
