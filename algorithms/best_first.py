@@ -10,11 +10,11 @@ import copy
 import os
 import time
 
-from classes import coordinate as crd
-from classes import gate as gt
-from classes import node as nd
-from classes import wire as wr
-from classes import chip as cp
+from classes_best_first import coordinate as crd
+from classes_best_first import gate as gt
+from classes_best_first import node as nd
+from classes_best_first import wire as wr
+from classes_best_first import chip as cp
 
 
 def main(chip_data, netlist):

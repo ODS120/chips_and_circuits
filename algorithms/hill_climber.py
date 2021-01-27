@@ -327,11 +327,6 @@ def generate_output(chip, chip_id, net_id):
             output.writerow([(path_data[0], path_data[1]), path_data[2]])
 
     print(f"Best cost: {chip.best_cost} ")            
-    
-    # Create dimensions CSV file used for visualization 
-    with open('dimensions.csv', 'w') as file:
-        output = csv.writer(file)
-        output.writerow([chip.width, chip.height, chip.depth])
 
     # Add chip_id, net_id and chip_cost to CSV output file
     with open('output.csv', 'a', newline='') as file:

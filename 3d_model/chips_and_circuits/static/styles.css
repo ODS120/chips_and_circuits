@@ -1,14 +1,31 @@
+html, body {
+    height: 100%;
+    padding: 0 20px;
+    background-image: linear-gradient(to bottom, rgba(0, 47, 255, 0.075),   rgba(109, 123, 250, 0.116));
+}
 h1 {
-    color: blue;
+    margin-top: 30px;
+    color:  #008CBA;;
 }
-h2  {
-    color: purple;
-}
-h3 {
-    color: orange;
+h2 {
+    margin-top: 20px;
+    font-size: 18px;
 }
 
-#center_div {
-    margin-left: 0;
-    width: 500px; 
+.center_div {
+    width: 1000px;
+    height: 550px;
+}
+
+#upload_button {
+    margin: 10px;
+    background-color: #008CBA;
+    border: none;
+    padding: 12px 28px;
+    color: white;
+    font-size: 16px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: 5px;
 }

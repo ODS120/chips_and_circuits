@@ -4,7 +4,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Python_Test</title>
+        <title>Chips and Circuits</title>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
         <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
         <link rel="stylesheet" href="{% static 'styles.css' %}">
@@ -12,7 +12,7 @@
     </head>
 
     <body>
-        <h3>load form</h3>
+        <h1>Load chip data</h1>
 
         <div class="row">
             <div class="col-3">
@@ -20,26 +20,20 @@
                     {% csrf_token %}
                     <div class="form-group">
                         <div>
-                            <label for="name" >netlist_file </label>
+                            <h2>Netlist output file</h2>
                             <input type="file" name="netlist_file" id="netlist_file" required="True" class="form-control" >
                         </div>
                         <div>
-                            <label for="name" >print_file </label>
+                            <h2>Print file</h2>
                             <input type="file" name="print_file" id="print_file" required="True" class="form-control">
                         </div>     
-                        <!-- <div>
-                            <label for="name" >dimension_file </label>
-                            <input type="file" name="dimensions_file" id="dimensions_file" required="True" class="form-control">
-                        </div>                  -->
-                        <button> Upload </button>
+                        <button id="upload_button"> Upload </button>
                     </div>
                 </form>
             </div>
                 
             <div class="col">
-                <div id="center_div">
-                    <div id='graph_div'> </div>
-                </div>
+                <div class="center_div" id='graph_div'> </div>
             </div>
         </div>
     </body>
@@ -47,8 +41,6 @@
     <script>
         var graph_data = JSON.parse("{{graph_data_JSON|escapejs}}"); 
         var settings_data = JSON.parse("{{settings_JSON|escapejs}}"); 
-        var test1_JSON = JSON.parse("{{test1_JSON|escapejs}}"); 
-        var test2_JSON = JSON.parse("{{test2_JSON|escapejs}}"); 
     </script>
     <script src="{% static 'index.js' %}"></script>
   

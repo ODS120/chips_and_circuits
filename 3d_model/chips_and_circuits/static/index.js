@@ -2,6 +2,8 @@ let traces = [];
  
 lines_xyz = graph_data;
 dimensions = settings_data;
+console.log(graph_data)
+console.log(settings_data)
 
 for (i = 0; i < lines_xyz.length; i++) {
     
@@ -29,7 +31,7 @@ let layout = {
     scene: {
         aspectmode: "manual",
         width: 1000,
-        height: 700,
+        height: 600,
         xaxis: {
             range: [parseInt(dimensions[0]), 0]
         },
