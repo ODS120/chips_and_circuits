@@ -1,10 +1,20 @@
+/**
+views.py
+
+Chips & Circuits 2021
+Martijn van Veen, Olaf Stringer, Jan-Joost Raedts
+
+Settings of the visualisation of the connected gates.
+ */
+
+
 let traces = [];
  
 lines_xyz = graph_data;
 dimensions = settings_data;
 
+// Initiate lines and gates
 for (i = 0; i < lines_xyz.length; i++) {
-    
     traces[i] = {
         x: lines_xyz[i][0],
         y: lines_xyz[i][1],
@@ -23,7 +33,10 @@ for (i = 0; i < lines_xyz.length; i++) {
     };
 }
 console.log(parseInt(dimensions[0]))
+
 let data = traces;
+
+// Dimensions of the graph
 let layout = {
     title: "Chips and Circuits",
     scene: {
@@ -40,4 +53,6 @@ let layout = {
             range: [0, parseInt(dimensions[2])]
         }},
 };
+
+// Plot the graph
 Plotly.newPlot('graph_div', data, layout); 

@@ -2,7 +2,7 @@
 =============
 ### Study course assignment
 ### Programmeertheorie - Final assignment
-### Minor Programmeren januari 2021
+### Minor Programmeren Najaar 2020-2021
 ### Universiteit van Amsterdam
 ### Team'JOM-Intelligence'
 #### Martijn van Veen, Olaf Stringer, Jan-Joost Raedts
@@ -59,39 +59,17 @@ The explanation above can be summarised in the following steps:
 - The existing csv will be overwritten and the cheapest path combination will be saved
 
 
-
 ## Running the program
 ### Running the algoritms
-To run either of the two algorithms, their respective program needs to be run with the desired chip and netlist locations added as commandline arguments.
-
-#### Algorithm 1:
-At the commandprompt, enter:
-python3 main_astar.py data/chip_{chipnumber of choice}/print_{number corresponding with the printplate of chosen chip}.csv data/chip_{chip of choice}/netlist_{number corresponding to the netlist of choice available for the chose chip}.csv
-
-f.i., in the case of wanting to run netlist_1 from chip_0, type:
-`python3 code/main_astar.py data/chip_0/print_0.csv data/chip_0/netlist_1.csv`
-
-#### Algorithm 2:
-At the commandprompt, enter:
-python3 main_hill_climber.py data/chip_{chipnumber of choice}/print_{number corresponding with the printplate of chosen chip}.csv data/chip_{chip of choice}/netlist_{number corresponding to the netlist of choice available for the chose chip}.csv
-
-f.i., in the case of wanting to run netlist_1 from chip_0, type:
-`python3 code/main_hill_climber.py data/chip_0/print_0.csv data/chip_0/netlist_1.csv`
-
-### Running the visualisation
-After having run either of the algorithms in the manner described above, at the commandline enter:
-`python3 code/3d_model/manage.py runserver`
-
-
-
-## Running the program
-### Running the algoritms
-At the commandprompt, enter:
+At the commandprompt, start by entering:
 python3 code/main.py data/chip_{chipnumber of choice}/print_{number corresponding with the printplate of chosen chip}.csv data/chip_{chip of choice}/netlist_{number corresponding to the netlist of choice available for the chose chip}.csv
 
-You then are presented with a choice: use either the best first search algorithm or the hill climber algorithm. By pressing either 1 or 2 respectively, the chosen algorithm will be run.
+Upon running the program, a choice will be given to either use the `Best First Search` Algorithm by entering 1 or use the `Hill Climber` algorithm by entering 2.
 
-Afterwards you will be presented with the elapsed time in seconds and, if the algorithm has been successful, the `output.csv` file will have been updated with the current results.
+f.i., in the case of wanting to run netlist_1 from chip_0, type:
+`python3 code/main.py data/chip_0/print_0.csv data/chip_0/netlist_1.csv`
+
+After completing processing the chosen chip and netlist combination through the algorithm of choice, the running time will be shown in seconds. If the algorithm was able to find a solution, the `output.csv` file in the `output` folder will have been updated with these recent results.
 
 ### Running the visualisation
 After having run either of the algorithms in the manner described above, at the commandline enter:

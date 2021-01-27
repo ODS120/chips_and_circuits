@@ -1,3 +1,12 @@
+"""
+main.py
+
+Chips & Circuits 2021
+Martijn van Veen, Olaf Stringer, Jan-Joost Raedts
+
+Choose which algorithm to employ.
+"""
+
 from sys import argv
 from algorithms import best_first
 from algorithms import hill_climber

@@ -1,3 +1,12 @@
+"""
+wire.py
+
+Chips & Circuits 2021
+Martijn van Veen, Olaf Stringer, Jan-Joost Raedts
+
+Implements the internal representation of a chip.
+"""
+
 import csv
 from . import coordinate as crd
 from . import gate as gt
