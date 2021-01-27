@@ -1,7 +1,7 @@
 
 
 from sys import argv
-from algorithms import astar_old
+from algorithms import best_first
 
 if __name__ == "__main__":
     # Check command line arguments
@@ -9,4 +9,4 @@ if __name__ == "__main__":
         print("Usage: 'python main.py [print_x] [netlist_y]")
         exit(1)
  
-    astar_old.main(argv[1], argv[2])
+    best_first.main(argv[1], argv[2])
