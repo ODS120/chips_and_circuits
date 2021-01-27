@@ -94,7 +94,7 @@ def run_algorithm(chip, open_paths):
     total_resets = 0
     iteration = 0
     closed_paths = {}
-    tries = 3
+    tries = 20
 
     # Find path for every open path
     while open_paths:
