@@ -68,15 +68,15 @@ At the commandprompt, enter:
 python3 main_astar.py data/chip_{chipnumber of choice}/print_{number corresponding with the printplate of chosen chip}.csv data/chip_{chip of choice}/netlist_{number corresponding to the netlist of choice available for the chose chip}.csv
 
 f.i., in the case of wanting to run netlist_1 from chip_0, type:
-`python3 main_astar.py data/chip_0/print_0.csv data/chip_0/netlist_1.csv`
+`python3 code/main_astar.py data/chip_0/print_0.csv data/chip_0/netlist_1.csv`
 
 #### Algorithm 2:
 At the commandprompt, enter:
 python3 main_hill_climber.py data/chip_{chipnumber of choice}/print_{number corresponding with the printplate of chosen chip}.csv data/chip_{chip of choice}/netlist_{number corresponding to the netlist of choice available for the chose chip}.csv
 
 f.i., in the case of wanting to run netlist_1 from chip_0, type:
-`python3 main_hill_climber.py data/chip_0/print_0.csv data/chip_0/netlist_1.csv`
+`python3 code/main_hill_climber.py data/chip_0/print_0.csv data/chip_0/netlist_1.csv`
 
 ### Running the visualisation
 After having run either of the algorithms in the manner described above, at the commandline enter:
-`3d_model/manage.py runserver`
+`python3 code/3d_model/manage.py runserver`

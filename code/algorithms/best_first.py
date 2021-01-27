@@ -37,7 +37,7 @@ def main(chip_data, netlist):
     load_connections(netlist, chip, chip_id, net_id)
 
     end = time.perf_counter()
-    print(end - start)
+    print(f"Runtime in seconds: {end - start}")
 
 
 def load_connections(netlist, chip, chip_id, net_id):
@@ -67,8 +67,6 @@ def load_connections(netlist, chip, chip_id, net_id):
 
     # Attempt 4 different connection orders
     while order in range(4):
-        print(order)
-        print(attempt)
         if reshuffle:
             error_gates = malfunction.pop(0)
             connections, attempt, order = reshuffle_connections(attempt, connections, error_gates, order)
@@ -261,7 +259,7 @@ def save_csv(net, wires, net_id, chip_id, chip):
         chip_id (int): ID to identify the current chip
         chip (object): Internal representation of the chip
     """
-    with open(f'output{net_id}.csv', 'w') as file:
+    with open('output.csv', 'w') as file:
         # Write first line
         output = csv.writer(file)
         output.writerow(["net", "wires"])
